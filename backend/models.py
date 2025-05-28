@@ -93,7 +93,7 @@ class Usuario(Base, SoftDeleteMixin):
     log_acoes = relationship("LogAcao", back_populates="usuario")
 
 
-class Empresa(Base):
+class Empresa(Base, SoftDeleteMixin):
     """Tabela das empresas/empregadores/clientes."""
     __tablename__ = "empresas"
 
