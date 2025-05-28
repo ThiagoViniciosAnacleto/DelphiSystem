@@ -12,6 +12,8 @@ from cruds.dashboard import (
     chamados_ultimos_7_dias,
 )
 
+from typing import Optional
+
 from database import Base, engine
 Base.metadata.create_all(bind=engine)
 
@@ -75,3 +77,24 @@ def dashboard_avancado_view(db: Session = Depends(get_db), usuario: UsuarioOut =
         "por_tecnico": [{"tecnico": nome, "quantidade": qtd} for nome, qtd in chamados_por_tecnico(db)],
         "ultimos_7_dias": [{"data": str(data), "quantidade": qtd} for data, qtd in chamados_ultimos_7_dias(db)],
     }
+
+@app.get("/chamados/", response_model=List[ChamadoOut])
+def listar_chamados_view(
+    status_id: Optional[int] = None,
+    empresa_id: Optional[int] = None,
+    cliente: Optional[str] = None,
+    responsavel_id: Optional[int] = None,
+    order_by: str = "datetime_abertura",
+    desc: bool = False,
+    db: Session = Depends(get_db),
+    usuario: UsuarioOut = Depends(get_current_user)
+):
+    return cruds.listar_chamados(
+        db,
+        status_id=status_id,
+        empresa_id=empresa_id,
+        cliente=cliente,
+        responsavel_id=responsavel_id,
+        order_by=order_by,
+        desc=desc
+    )
