@@ -18,3 +18,18 @@ class UsuarioOut(UsuarioBase):
 
     class Config:
         orm_mode = True
+
+class RoleBase(BaseModel):
+    nome: str
+
+class RoleCreate(RoleBase):
+    pass
+
+class RoleUpdate(RoleBase):
+    pass
+
+class RoleOut(RoleBase):
+    id: int
+
+    class Config:
+        orm_mode = True
