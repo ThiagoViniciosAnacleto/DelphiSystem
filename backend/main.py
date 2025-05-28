@@ -5,7 +5,11 @@ import backend.cruds as cruds
 from models import Usuario
 from schemas import UsuarioCreate, UsuarioUpdate, UsuarioOut
 from typing import List
+from auth import get_current_user
+from cruds.dashboard import contar_chamados_por_status
 
+
+from database import Base, engine
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -60,3 +64,7 @@ def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return {"detail": "Usuário removido"}
+
+@app.get("/dashboard/contadores")
+def dashboard_contadores_view(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    return contar_chamados_por_status(db)
