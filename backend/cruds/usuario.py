@@ -4,13 +4,9 @@ from schemas import UsuarioCreate, UsuarioUpdate
 from werkzeug.security import generate_password_hash
 
 
-def criar_usuario(db: Session, dados: UsuarioCreate) -> Usuario:
-    senha_hash = generate_password_hash(dados.senha)
-    novo_usuario = Usuario(
-        nome=dados.nome,
-        email=dados.email,
-        senha_hash=senha_hash,
-    )
+def criar_usuario(db: Session, dados: UsuarioCreate):
+    senha_hash = gerar_hash_senha(dados.senha)
+    novo_usuario = Usuario(nome=dados.nome, email=dados.email, senha_hash=senha_hash)
     db.add(novo_usuario)
     db.commit()
     db.refresh(novo_usuario)
