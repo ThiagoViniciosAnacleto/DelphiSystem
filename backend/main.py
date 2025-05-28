@@ -6,8 +6,11 @@ from models import Usuario
 from schemas import UsuarioCreate, UsuarioUpdate, UsuarioOut
 from typing import List
 from auth import get_current_user
-from cruds.dashboard import contar_chamados_por_status
-
+from cruds.dashboard import (
+    chamados_por_empresa,
+    chamados_por_tecnico,
+    chamados_ultimos_7_dias,
+)
 
 from database import Base, engine
 Base.metadata.create_all(bind=engine)
@@ -65,6 +68,10 @@ def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return {"detail": "Usuário removido"}
 
-@app.get("/dashboard/contadores")
-def dashboard_contadores_view(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    return contar_chamados_por_status(db)
+@app.get("/dashboard/avancado")
+def dashboard_avancado_view(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    return {
+        "por_empresa": [{"empresa": nome, "quantidade": qtd} for nome, qtd in chamados_por_empresa(db)],
+        "por_tecnico": [{"tecnico": nome, "quantidade": qtd} for nome, qtd in chamados_por_tecnico(db)],
+        "ultimos_7_dias": [{"data": str(data), "quantidade": qtd} for data, qtd in chamados_ultimos_7_dias(db)],
+    }
