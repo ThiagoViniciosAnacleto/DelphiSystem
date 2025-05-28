@@ -136,17 +136,17 @@ class FrequenciaOut(FrequenciaBase):
 
 # ---------- Chamado ----------
 class ChamadoBase(BaseModel):
-    cliente: Optional[str]
-    porta_ssh: Optional[str]
-    relato: Optional[str]
-    descricao_acao: Optional[str]
-    prioridade_id: Optional[int]
-    status_id: Optional[int]
-    empresa_id: Optional[int]
-    tipo_maquina_id: Optional[int]
-    origem_id: Optional[int]
-    responsavel_atendimento_id: Optional[int]
-    responsavel_acao_id: Optional[int]
+    cliente: str
+    relato: str
+    porta_ssh: Optional[str] = None
+    descricao_acao: Optional[str] = None
+    prioridade_id: Optional[int] = None
+    status_id: Optional[int] = None
+    empresa_id: Optional[int] = None
+    tipo_maquina_id: Optional[int] = None
+    origem_id: Optional[int] = None
+    responsavel_atendimento_id: Optional[int] = None
+    responsavel_acao_id: Optional[int] = None
 
 class ChamadoCreate(ChamadoBase):
     pass
