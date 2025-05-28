@@ -172,7 +172,7 @@ class Chamado(Base, SoftDeleteMixin):
     logs = relationship("LogAcao", back_populates="chamado")
 
 
-class ChamadoRecorrente(Base):
+class ChamadoRecorrente(Base, SoftDeleteMixin):
     """Tabela de chamados recorrentes, gerenciando frequências e próximas execuções."""
     __tablename__ = "chamados_recorrentes"
 
@@ -189,14 +189,13 @@ class ChamadoRecorrente(Base):
 
     origem_id = Column(Integer, ForeignKey("origens_problema.id"), nullable=True)
     responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
-    responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
     descricao_acao = Column(Text, nullable=True)
 
     frequencia_id = Column(Integer, ForeignKey("frequencias.id"), nullable=False)
     frequencia = relationship("Frequencia", back_populates="chamados_recorrentes")
 
     proxima_execucao = Column(DateTime(timezone=True), nullable=False)
-    ativo = Column(Boolean, default=True, nullable=False)
 
     empresa = relationship("Empresa", back_populates="chamados_recorrentes")
     tipo_maquina = relationship("Maquina", back_populates="chamados_recorrentes")
