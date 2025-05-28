@@ -22,9 +22,6 @@ class Role(Base, SoftDeleteMixin):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # Soft delete
-    ativo = Column(Boolean, nullable=False, default=True, index=True)
-
     nome = Column(String(100), unique=True, nullable=False)
 
     usuarios = relationship("Usuario", back_populates="role")
@@ -37,7 +34,7 @@ class Prioridade(Base):
     id = Column(Integer, primary_key=True)
     nome = Column(String(50), unique=True, nullable=False)
 
-    chamados = relationship("Chamado", back_populates="prioridade_obj")
+    chamados = relationship("Chamado", back_populates="prioridade")
 
 
 class Status(Base):
@@ -47,7 +44,7 @@ class Status(Base):
     id = Column(Integer, primary_key=True)
     nome = Column(String(50), unique=True, nullable=False)
 
-    chamados = relationship("Chamado", back_populates="status_obj")
+    chamados = relationship("Chamado", back_populates="status")
 
 
 class Frequencia(Base):
@@ -65,9 +62,6 @@ class Usuario(Base, SoftDeleteMixin):
     __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
-
-    # Soft delete
-    ativo = Column(Boolean, nullable=False, default=True, index=True)
 
     nome = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
@@ -142,9 +136,6 @@ class Chamado(Base, SoftDeleteMixin):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # Soft delete
-    ativo = Column(Boolean, nullable=False, default=True, index=True)
-
     responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     empresa_id = Column(Integer, ForeignKey("empresas.id"), nullable=True, index=True)
@@ -163,8 +154,8 @@ class Chamado(Base, SoftDeleteMixin):
 
     descricao_acao = Column(Text, nullable=True)
 
-    prioridade_obj = relationship("Prioridade", back_populates="chamados")
-    status_obj = relationship("Status", back_populates="chamados")
+    prioridade = relationship("Prioridade", back_populates="chamados")
+    status = relationship("Status", back_populates="chamados")
 
     responsavel_atendimento = relationship(
         "Usuario",
@@ -197,7 +188,7 @@ class ChamadoRecorrente(Base):
     prioridade = relationship("Prioridade")
 
     origem_id = Column(Integer, ForeignKey("origens_problema.id"), nullable=True)
-    responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
     responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     descricao_acao = Column(Text, nullable=True)
 
@@ -215,9 +206,6 @@ class ChamadoRecorrente(Base):
 class LogAcao(Base, SoftDeleteMixin):
     """Tabela para armazenar logs das ações realizadas por usuários em chamados."""
     __tablename__ = "log_acoes"
-
-    # Soft delete
-    ativo = Column(Boolean, nullable=False, default=True, index=True)
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
