@@ -1,11 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi import Body
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from backend.models import LogAcao
+from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
-from backend.auth import get_current_user
+from backend.auth import get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
 import backend.cruds as cruds
 from backend.schemas import *
+from backend.utils import hash_senha
 from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -410,3 +412,34 @@ def dashboard_avancado(db: Session = Depends(get_db), usuario: UsuarioOut = Depe
             {"data": str(data), "quantidade": qtd} for data, qtd in cruds.chamados_ultimos_7_dias(db)
         ],
     }
+    
+    
+# ---------------------- RECUPERAR SENHA ----------------------
+@app.post("/recuperar-senha")
+def recuperar_senha(email: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="E-mail não encontrado")
+
+    token = criar_token_acesso(data={"sub": usuario.email}, expires_delta=timedelta(minutes=30))
+    link = f"https://gleeful-maamoul-18d695.netlify.app/resetar-senha?token={token}"
+
+    enviar_email_recuperacao(usuario.email, link)
+    return {"mensagem": "E-mail enviado com instruções para redefinir a senha"}
+
+# ---------------------- RESETAR SENHA ----------------------
+@app.post("/resetar-senha")
+def resetar_senha(token: str = Body(...), nova_senha: str = Body(...), db: Session = Depends(get_db)):
+    try:
+        dados = verificar_token(token)
+        email = dados["sub"]
+    except:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
+
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    usuario.senha = hash_senha(nova_senha)
+    db.commit()
+    return {"mensagem": "Senha redefinida com sucesso"}
