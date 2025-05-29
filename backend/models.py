@@ -1,3 +1,5 @@
+from sqlalchemy.sql import func    
+
 from sqlalchemy import (
     Column,
     Integer,
@@ -71,13 +73,10 @@ class Usuario(Base, SoftDeleteMixin):
     role = relationship("Role", back_populates="usuarios")
 
     created_at = Column(
-        TIMESTAMP, nullable=False, server_default="CURRENT_TIMESTAMP"
+        TIMESTAMP, nullable=False, server_default=func.now()
     )
     updated_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default="CURRENT_TIMESTAMP",
-        onupdate="CURRENT_TIMESTAMP",
+        TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
     chamados_atendimento = relationship(
@@ -101,7 +100,7 @@ class Empresa(Base, SoftDeleteMixin):
     nome = Column(String(150), unique=True, index=True, nullable=False)
 
     created_at = Column(
-        TIMESTAMP, nullable=False, server_default="CURRENT_TIMESTAMP"
+        TIMESTAMP, nullable=False, server_default=func.now()
     )
 
     chamados = relationship("Chamado", back_populates="empresa")
@@ -158,8 +157,8 @@ class Chamado(Base, SoftDeleteMixin):
     status = relationship("Status", back_populates="chamados", lazy="joined")
 
     responsavel_atendimento = relationship("Usuario",
-        foreign_keys=[responsavel_atendimento_id],
-        back_populates="chamados_atendimento", lazy="joined")
+    foreign_keys=[responsavel_atendimento_id],
+    back_populates="chamados_atendimento", lazy="joined")
     
     responsavel_acao = relationship("Usuario", foreign_keys=[responsavel_acao_id], back_populates="chamados_acao", lazy="joined")
     empresa = relationship("Empresa", back_populates="chamados", lazy="joined")
@@ -208,7 +207,7 @@ class LogAcao(Base, SoftDeleteMixin):
     chamado_id = Column(Integer, ForeignKey("chamados.id"), nullable=True)
 
     acao = Column(String, nullable=False)
-    data_hora = Column(TIMESTAMP, nullable=False, server_default="CURRENT_TIMESTAMP")
+    data_hora = Column(TIMESTAMP, nullable=False, server_default=func.now())
 
     tipo = Column(String, nullable=True)
     campo = Column(String, nullable=True)
