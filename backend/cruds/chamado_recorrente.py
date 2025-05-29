@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import ChamadoRecorrente
-from schemas import ChamadoRecorrenteCreate, ChamadoRecorrenteUpdate
+from backend.models import ChamadoRecorrente
+from backend.schemas import ChamadoRecorrenteCreate, ChamadoRecorrenteUpdate
 from datetime import datetime
 
 def criar_chamado_recorrente(db: Session, dados: ChamadoRecorrenteCreate):

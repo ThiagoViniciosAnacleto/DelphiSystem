@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import OrigemProblema
-from schemas import OrigemProblemaCreate, OrigemProblemaUpdate
+from backend.models import OrigemProblema
+from backend.schemas import OrigemProblemaCreate, OrigemProblemaUpdate
 
 
 def criar_origem_problema(db: Session, origem_data: OrigemProblemaCreate) -> OrigemProblema:

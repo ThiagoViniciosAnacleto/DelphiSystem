@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Role
-from schemas import RoleCreate, RoleUpdate
+from backend.models import Role
+from backend.schemas import RoleCreate, RoleUpdate
 
 
 def criar_role(db: Session, dados: RoleCreate) -> Role:

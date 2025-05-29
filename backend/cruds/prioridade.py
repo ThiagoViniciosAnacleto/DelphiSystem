@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Prioridade
-from schemas import PrioridadeCreate, PrioridadeUpdate
+from backend.models import Prioridade
+from backend.schemas import PrioridadeCreate, PrioridadeUpdate
 
 
 def criar_prioridade(db: Session, dados: PrioridadeCreate) -> Prioridade:

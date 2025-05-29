@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Usuario
-from schemas import UsuarioCreate, UsuarioUpdate
+from backend.models import Usuario
+from backend.schemas import UsuarioCreate, UsuarioUpdate
 from werkzeug.security import generate_password_hash
 
 

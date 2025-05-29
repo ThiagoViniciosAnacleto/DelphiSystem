@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Maquina
-from schemas import MaquinaCreate, MaquinaUpdate
+from backend.models import Maquina
+from backend.schemas import MaquinaCreate, MaquinaUpdate
 
 
 def criar_maquina(db: Session, maquina_data: MaquinaCreate) -> Maquina:

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Frequencia
-from schemas import FrequenciaCreate, FrequenciaUpdate
+from backend.models import Frequencia
+from backend.schemas import FrequenciaCreate, FrequenciaUpdate
 
 
 def criar_frequencia(db: Session, frequencia_data: FrequenciaCreate) -> Frequencia:
