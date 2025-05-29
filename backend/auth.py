@@ -119,3 +119,9 @@ Equipe Power Vending
             server.send_message(msg)
     except Exception as e:
         raise RuntimeError(f"Erro ao enviar e-mail: {e}")
+
+def verificar_token(token: str):
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
