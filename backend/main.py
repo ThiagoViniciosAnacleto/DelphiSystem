@@ -6,10 +6,19 @@ from backend.database import SessionLocal, engine, Base
 from backend.auth import get_current_user
 import backend.cruds as cruds
 from backend.schemas import *
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://gleeful-maamoul-18d695.netlify.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
