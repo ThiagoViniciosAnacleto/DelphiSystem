@@ -30,7 +30,7 @@
             <button type="submit" class="btn btn-primary w-100">Entrar</button>
 
             <div class="text-center mt-2">
-            <a href="#" class="small">Esqueci minha senha</a>
+                <a href="/recuperar-senha" class="small">Esqueci minha senha</a>
             </div>
 
             <div v-if="erro" class="alert alert-danger mt-3" role="alert">
