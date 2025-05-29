@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
-
-from database import SessionLocal, engine, Base
-from auth import get_current_user
+from backend.models import LogAcao
+from backend.database import SessionLocal, engine, Base
+from backend.auth import get_current_user
 import backend.cruds as cruds
-from schemas import *
+from backend.schemas import *
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,7 +20,7 @@ def get_db():
 
 # ---------------------- LOGIN ----------------------
 from fastapi.security import OAuth2PasswordRequestForm
-from auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 
 @app.post("/login")
