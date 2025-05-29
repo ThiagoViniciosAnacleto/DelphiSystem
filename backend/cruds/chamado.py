@@ -4,12 +4,24 @@ from schemas import ChamadoCreate, ChamadoUpdate
 from auth import get_usuario_logado_email
 from datetime import datetime
 
-def criar_chamado(db: Session, dados: ChamadoCreate):
+def criar_chamado(db: Session, dados: ChamadoCreate, usuario_id: int):
     chamado = Chamado(**dados.model_dump())
     chamado.datetime_abertura = datetime.utcnow()
     db.add(chamado)
     db.commit()
     db.refresh(chamado)
+
+    log = LogAcao(
+        usuario_id=usuario_id,
+        chamado_id=chamado.id,
+        acao="criacao",
+        tipo="chamado",
+        campo=None,
+        valor_antigo=None,
+        valor_novo="Chamado criado"
+    )
+    db.add(log)
+    db.commit()
     return chamado
 
 def listar_chamados(
@@ -66,10 +78,23 @@ def atualizar_chamado(db: Session, chamado_id: int, dados: ChamadoUpdate, usuari
     db.refresh(chamado)
     return chamado
 
-def deletar_chamado(db: Session, chamado_id: int):
+def deletar_chamado(db: Session, chamado_id: int, usuario_id: int):
     chamado = db.query(Chamado).filter_by(id=chamado_id, ativo=True).first()
     if not chamado:
         return None
     chamado.ativo = False
     db.commit()
+
+    log = LogAcao(
+        usuario_id=usuario_id,
+        chamado_id=chamado_id,
+        acao="remocao",
+        tipo="chamado",
+        campo=None,
+        valor_antigo="Ativo",
+        valor_novo="Inativo"
+    )
+    db.add(log)
+    db.commit()
     return chamado
+
