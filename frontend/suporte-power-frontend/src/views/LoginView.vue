@@ -27,6 +27,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import qs from 'qs'
 import { useRouter } from 'vue-router'
 
 const username = ref('')
@@ -41,10 +42,17 @@ const api = axios.create({
 
 const fazerLogin = async () => {
     try {
-        const response = await api.post('/login', {
-            username: username.value,
-            password: password.value
-        })
+        const response = await api.post('/login',
+            qs.stringify({
+                username: username.value,
+                password: password.value
+            }),
+        {
+                headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }
+    )
 
     const token = response.data.access_token
     localStorage.setItem('token', token)
