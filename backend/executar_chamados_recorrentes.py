@@ -1,13 +1,22 @@
+import os
+import sys
+from dotenv import load_dotenv
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Força carregamento de variáveis de ambiente
+load_dotenv("backend/.env.dev")
+
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from database import get_db
-from models import ChamadoRecorrente, Frequencia
-from schemas import ChamadoCreate
-from crud.chamado import criar_chamado
-import os
+from backend.database import get_db
+from backend.models import ChamadoRecorrente, Frequencia
+from backend.schemas import ChamadoCreate
+from backend.cruds.chamado import criar_chamado
 
 # ID de sistema para logs automáticos
-USUARIO_AUTOMATICO_ID = int(os.getenv("USUARIO_AUTOMATICO_ID", 1))  # pode ajustar
+USUARIO_AUTOMATICO_ID = int(os.getenv("USUARIO_AUTOMATICO_ID", 1))
+
 
 def executar_chamados_recorrentes():
     db: Session = next(get_db())

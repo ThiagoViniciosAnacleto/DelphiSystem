@@ -1,7 +1,6 @@
 from .chamado import (
     criar_chamado,
     listar_chamados,
-    buscar_chamado_por_id,
     atualizar_chamado,
     deletar_chamado,
 )
@@ -9,7 +8,6 @@ from .chamado import (
 from .chamado_recorrente import (
     criar_chamado_recorrente,
     listar_chamados_recorrentes,
-    buscar_chamado_recorrente_por_id,
     atualizar_chamado_recorrente,
     deletar_chamado_recorrente,
 )
@@ -17,7 +15,6 @@ from .chamado_recorrente import (
 from .empresa import (
     criar_empresa,
     listar_empresas,
-    buscar_empresa_por_id,
     atualizar_empresa,
     deletar_empresa,
 )
@@ -25,7 +22,6 @@ from .empresa import (
 from .frequencia import (
     criar_frequencia,
     listar_frequencias,
-    buscar_frequencia_por_id,
     atualizar_frequencia,
     deletar_frequencia,
 )

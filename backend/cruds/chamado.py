@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from models import Chamado, LogAcao
 from schemas import ChamadoCreate, ChamadoUpdate
-from auth import get_usuario_logado_email
 from datetime import datetime
 
 def criar_chamado(db: Session, dados: ChamadoCreate, usuario_id: int):
