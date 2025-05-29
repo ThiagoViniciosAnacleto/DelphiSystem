@@ -244,9 +244,14 @@ def obter_chamado(chamado_id: int, db: Session = Depends(get_db), usuario: Usuar
         raise HTTPException(status_code=404, detail="Chamado não encontrado")
     return chamado
 
+@app.get("/chamados/{chamado_id}/timeline", response_model=List[LogAcaoOut])
+def timeline_chamado(chamado_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    logs = db.query(LogAcao).filter_by(chamado_id=chamado_id).order_by(LogAcao.data_hora.asc()).all()
+    return logs
+
 @app.post("/chamados/", response_model=ChamadoOut)
 def criar_chamado(chamado: ChamadoCreate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    return cruds.criar_chamado(db, chamado)
+    return cruds.criar_chamado(db, chamado, usuario.id)
 
 @app.put("/chamados/{chamado_id}", response_model=ChamadoOut)
 def atualizar_chamado(chamado_id: int, dados: ChamadoUpdate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
@@ -257,7 +262,7 @@ def atualizar_chamado(chamado_id: int, dados: ChamadoUpdate, db: Session = Depen
 
 @app.delete("/chamados/{chamado_id}")
 def deletar_chamado(chamado_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    sucesso = cruds.deletar_chamado(db, chamado_id)
+    sucesso = cruds.deletar_chamado(db, chamado_id, usuario.id)
     if not sucesso:
         raise HTTPException(status_code=404, detail="Chamado não encontrado")
     return {"detail": "Chamado removido"}
