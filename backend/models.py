@@ -55,6 +55,7 @@ class Frequencia(Base):
 
     id = Column(Integer, primary_key=True)
     nome = Column(String(50), unique=True, nullable=False)
+    dias = Column(Integer, nullable=False)
 
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="frequencia")
 
