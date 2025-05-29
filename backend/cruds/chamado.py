@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from models import Chamado
+from models import Chamado, LogAcao
 from schemas import ChamadoCreate, ChamadoUpdate
+from auth import get_usuario_logado_email
 from datetime import datetime
 
 def criar_chamado(db: Session, dados: ChamadoCreate):
@@ -40,15 +41,27 @@ def listar_chamados(
 def obter_chamado(db: Session, chamado_id: int):
     return db.query(Chamado).filter_by(id=chamado_id, ativo=True).first()
 
-def atualizar_chamado(db: Session, chamado_id: int, dados: ChamadoUpdate):
+def atualizar_chamado(db: Session, chamado_id: int, dados: ChamadoUpdate, usuario_id: int):
     chamado = db.query(Chamado).filter_by(id=chamado_id, ativo=True).first()
     if not chamado:
         return None
-    for campo, valor in dados.model_dump(exclude_unset=True).items():
-        setattr(chamado, campo, valor)
-        
-    chamado.updated_at = datetime.utcnow()
-    
+
+    campos = dados.dict(exclude_unset=True)
+    for campo, novo_valor in campos.items():
+        valor_antigo = getattr(chamado, campo)
+        if valor_antigo != novo_valor:
+            log = LogAcao(
+                usuario_id=usuario_id,
+                chamado_id=chamado_id,
+                acao="atualizacao",
+                tipo="chamado",
+                campo=campo,
+                valor_antigo=str(valor_antigo) if valor_antigo is not None else None,
+                valor_novo=str(novo_valor) if novo_valor is not None else None,
+            )
+            db.add(log)
+        setattr(chamado, campo, novo_valor)
+
     db.commit()
     db.refresh(chamado)
     return chamado

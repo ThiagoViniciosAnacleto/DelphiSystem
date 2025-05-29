@@ -125,36 +125,6 @@ def deletar_origem_problema(origem_id: int, db: Session = Depends(get_db), usuar
         raise HTTPException(status_code=404, detail="Origem não encontrada")
     return {"detail": "Origem removida"}
 
-# ---------------------- ORIGENS DO PROBLEMA ----------------------
-@app.get("/origens_problema/", response_model=List[OrigemProblemaOut])
-def listar_origens_problema(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    return cruds.listar_origens_problema(db)
-
-@app.get("/origens_problema/{origem_id}", response_model=OrigemProblemaOut)
-def buscar_origem_problema(origem_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    origem = cruds.buscar_origem_problema_por_id(db, origem_id)
-    if not origem:
-        raise HTTPException(status_code=404, detail="Origem não encontrada")
-    return origem
-
-@app.post("/origens_problema/", response_model=OrigemProblemaOut)
-def criar_origem_problema(origem: OrigemProblemaCreate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    return cruds.criar_origem_problema(db, origem)
-
-@app.put("/origens_problema/{origem_id}", response_model=OrigemProblemaOut)
-def atualizar_origem_problema(origem_id: int, dados: OrigemProblemaUpdate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    origem = cruds.atualizar_origem_problema(db, origem_id, dados)
-    if not origem:
-        raise HTTPException(status_code=404, detail="Origem não encontrada")
-    return origem
-
-@app.delete("/origens_problema/{origem_id}")
-def deletar_origem_problema(origem_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    sucesso = cruds.deletar_origem_problema(db, origem_id)
-    if not sucesso:
-        raise HTTPException(status_code=404, detail="Origem não encontrada")
-    return {"detail": "Origem removida"}
-
 # ---------------------- PRIORIDADES ----------------------
 @app.get("/prioridades/", response_model=List[PrioridadeOut])
 def listar_prioridades(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
@@ -280,7 +250,7 @@ def criar_chamado(chamado: ChamadoCreate, db: Session = Depends(get_db), usuario
 
 @app.put("/chamados/{chamado_id}", response_model=ChamadoOut)
 def atualizar_chamado(chamado_id: int, dados: ChamadoUpdate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    chamado = cruds.atualizar_chamado(db, chamado_id, dados)
+    chamado = cruds.atualizar_chamado(db, chamado_id, dados, usuario_id=usuario.id)
     if not chamado:
         raise HTTPException(status_code=404, detail="Chamado não encontrado")
     return chamado
