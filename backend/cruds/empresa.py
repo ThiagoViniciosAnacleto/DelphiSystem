@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Empresa
-from schemas import EmpresaCreate, EmpresaUpdate
+from backend.models import Empresa
+from backend.schemas import EmpresaCreate, EmpresaUpdate
 from datetime import datetime
 
 

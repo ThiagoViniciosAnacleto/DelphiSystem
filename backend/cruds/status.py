@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Status
-from schemas import StatusCreate, StatusUpdate
+from backend.models import Status
+from backend.schemas import StatusCreate, StatusUpdate
 
 
 def criar_status(db: Session, dados: StatusCreate) -> Status:

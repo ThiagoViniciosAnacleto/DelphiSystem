@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import LogAcao
-from schemas import LogAcaoCreate
+from backend.models import LogAcao
+from backend.schemas import LogAcaoCreate
 from datetime import datetime
 
 

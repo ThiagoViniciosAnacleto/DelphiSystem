@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
-from models import Chamado, Empresa, Usuario
+from backend.models import Chamado, Empresa, Usuario
 from datetime import datetime, timedelta
 
 def chamados_por_empresa(db: Session):
