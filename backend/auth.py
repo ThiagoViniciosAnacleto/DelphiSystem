@@ -83,3 +83,39 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if not usuario:
         raise credentials_exception
     return usuario
+
+
+import smtplib
+from email.mime.text import MIMEText
+
+def enviar_email_recuperacao(destinatario: str, link: str):
+    remetente = os.getenv("EMAIL_ORIGEM")
+    senha = os.getenv("EMAIL_SENHA")
+
+    if not remetente or not senha:
+        raise RuntimeError("Variáveis EMAIL_ORIGEM e EMAIL_SENHA não definidas")
+
+    msg = MIMEText(f"""
+Olá,
+
+Recebemos uma solicitação para redefinir sua senha no sistema Suporte Power Vending.
+
+Clique no link abaixo para criar uma nova senha (válido por 30 minutos):
+
+{link}
+
+Se você não solicitou essa alteração, ignore este e-mail.
+
+Att,
+Equipe Power Vending
+    """)
+    msg["Subject"] = "Recuperação de Senha - Suporte Power"
+    msg["From"] = remetente
+    msg["To"] = destinatario
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(remetente, senha)
+            server.send_message(msg)
+    except Exception as e:
+        raise RuntimeError(f"Erro ao enviar e-mail: {e}")
