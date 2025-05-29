@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.models import Chamado, LogAcao
-from backend.models.schemas import ChamadoCreate, ChamadoUpdate
+from backend.schemas import ChamadoCreate, ChamadoUpdate
 from datetime import datetime
 
 def criar_chamado(db: Session, dados: ChamadoCreate, usuario_id: int):
