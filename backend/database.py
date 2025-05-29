@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-from models import Base
+from backend.models import Base
 
 # Carrega variáveis de ambiente com base no modo
 modo = os.getenv("MODO", "DEV")
