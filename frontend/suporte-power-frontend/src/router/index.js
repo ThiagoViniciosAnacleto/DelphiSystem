@@ -11,13 +11,13 @@ const routes = [
     {
         path: '/dashboard',
         name: 'Dashboard',
-        component: () => import('../views/DashboardView.vue') // criaremos depois
+        component: () => import('@/views/DashboardView.vue')
     },
 
     {
         path: '/recuperar-senha',
         name: 'RecuperarSenha',
-        omponent: () => import('@/views/RecuperarSenhaView.vue')
+        component: () => import('@/views/RecuperarSenhaView.vue')
     },
 
     {
