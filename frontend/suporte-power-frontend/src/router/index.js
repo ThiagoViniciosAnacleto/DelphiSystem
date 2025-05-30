@@ -1,30 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
+import MainLayout from '@/layouts/MainLayout.vue'
+import LoginView from '@/views/LoginView.vue'
+import RecuperarSenhaView from '@/views/RecuperarSenhaView.vue'
+import ResetarSenhaView from '@/views/ResetarSenhaView.vue'
+import DashboardView from '@/views/DashboardView.vue'
 
 const routes = [
-    {
-        path: '/',
-        name: 'Login',
-        component: LoginView
-    },
+    { path: '/login', component: LoginView },
 
-    {
-        path: '/dashboard',
-        name: 'Dashboard',
-        component: () => import('@/views/DashboardView.vue')
-    },
+    { path: '/recuperar-senha', component: RecuperarSenhaView },
+    
+    { path: '/resetar-senha', component: ResetarSenhaView },
 
-    {
-        path: '/recuperar-senha',
-        name: 'RecuperarSenha',
-        component: () => import('@/views/RecuperarSenhaView.vue')
-    },
-
-    {
-        path: '/resetar-senha',
-        component: () => import('@/views/ResetarSenhaView.vue')
+    { path: '/', component: MainLayout,
+        children: [
+            { path: '', redirect: '/dashboard' },
+            { path: 'dashboard', component: DashboardView },
+            { path: 'cadastrar-empresa', component: () => import('@/views/CadastrarEmpresaView.vue') },]
     }
-
 ]
 
 const router = createRouter({
