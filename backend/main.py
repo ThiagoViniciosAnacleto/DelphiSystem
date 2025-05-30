@@ -440,6 +440,6 @@ def resetar_senha(token: str = Body(...), nova_senha: str = Body(...), db: Sessi
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    usuario.senha = hash_senha(nova_senha)
+    usuario.senha_hash = hash_senha(nova_senha)
     db.commit()
     return {"mensagem": "Senha redefinida com sucesso"}
