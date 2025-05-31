@@ -6,8 +6,7 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from dotenv import load_dotenv  # Faltava isso!
-
+from dotenv import load_dotenv
 from backend.database import SessionLocal
 from backend import models
 
