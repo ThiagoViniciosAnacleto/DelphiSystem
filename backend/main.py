@@ -422,7 +422,7 @@ def recuperar_senha(email: str = Body(..., embed=True), db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="E-mail não encontrado")
 
     token = criar_token_acesso(data={"sub": usuario.email}, expires_delta=timedelta(minutes=30))
-    link = f"https://gleeful-maamoul-18d695.netlify.app/resetar-senha?token={token}"
+    link = f"https://suporte-power-dev.netlify.app/resetar-senha?token={token}"
 
     enviar_email_recuperacao(usuario.email, link)
     return {"mensagem": "E-mail enviado com instruções para redefinir a senha"}
