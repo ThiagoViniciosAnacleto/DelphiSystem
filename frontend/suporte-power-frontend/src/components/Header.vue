@@ -29,12 +29,17 @@ function logout() {
 <style scoped>
 .header {
     height: 60px;
+    width: 100%;
     background-color: #1a1a1a;
     color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 1.5rem;
+    border-bottom: 1px solid #2c2c2c;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .logo {
