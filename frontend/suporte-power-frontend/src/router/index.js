@@ -6,17 +6,25 @@ import ResetarSenhaView from '@/views/ResetarSenhaView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 
 const routes = [
+  // Rotas públicas (sem autenticação)
     { path: '/login', component: LoginView },
-
     { path: '/recuperar-senha', component: RecuperarSenhaView },
-    
     { path: '/resetar-senha', component: ResetarSenhaView },
 
-    { path: '/', component: MainLayout,
-        children: [
-            { path: '', redirect: '/dashboard' },
-            { path: 'dashboard', component: DashboardView },
-            { path: 'cadastrar-empresa', component: () => import('@/views/CadastrarEmpresaView.vue') },]
+  // Rotas protegidas (com layout principal)
+    {
+    path: '/',
+    component: MainLayout,
+    children: [
+        { path: '', redirect: '/dashboard' },
+        { path: 'dashboard', component: DashboardView },
+        { path: 'cadastrar-empresa', component: () => import('@/views/CadastrarEmpresaView.vue') },
+        { path: 'cadastrar-maquina', component: () => import('@/views/CadastrarMaquinaView.vue') },
+        { path: 'cadastrar-usuario', component: () => import('@/views/CadastrarUsuarioView.vue') },
+        { path: 'editar-privilegios', component: () => import('@/views/EditarPrivilegiosView.vue') },
+        { path: 'lista-chamados', component: () => import('@/views/ListaChamadosView.vue') },
+        { path: 'chamados-recorrentes', component: () => import('@/views/ChamadosRecorrentesView.vue') }
+        ]
     }
 ]
 
