@@ -1,23 +1,27 @@
 <template>
-  <header class="header">
-    <div class="left">
-      <img src="/logo.png" alt="Power Vending" class="logo" />
-    </div>
-
-    <div class="right">
-      <button class="btn yellow">🔔 Notificações</button>
-      <button class="btn yellow">⚙️ Modo Claro</button>
-      <button class="btn red" @click="logout">Sair</button>
-
-      <section class="usuario" aria-label="Informações do usuário logado">
-        <img :src="usuario.avatar" alt="Avatar do usuário" class="usuario-avatar" />
-        <div class="usuario-dados">
-          <span class="usuario-nome">{{ usuario.nome }}</span>
-          <span class="usuario-cargo">{{ usuario.nivel }}</span>
+    <header class="header">
+        <div class="left">
+            <img src="/logo.png" alt="Power Vending" class="logo" />
         </div>
-      </section>
-    </div>
-  </header>
+
+        <div class="right">
+            <button class="btn yellow">🔔 Notificações</button>
+            <button class="btn yellow">⚙️ Modo Claro</button>
+            <button class="btn red" @click="logout">Sair</button>
+
+            <section class="usuario" aria-label="Informações do usuário logado">
+                <img
+                :src="usuario.avatar"
+                alt="Avatar do usuário"
+                class="usuario-avatar"
+                @error="usuario.avatar = '/avatar.png'"/>
+                <div class="usuario-dados">
+                    <span class="usuario-nome">{{ usuario.nome }}</span>
+                    <span class="usuario-cargo">{{ usuario.nivel }}</span>
+                </div>
+            </section>
+        </div>
+    </header>
 </template>
 
 <script setup>
@@ -26,41 +30,50 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const usuario = reactive({
-  nome: '',
-  nivel: '',
-  avatar: ''
+    nome: '',
+    nivel: '',
+    avatar: ''
 })
 
 onMounted(() => {
-  const userData = JSON.parse(localStorage.getItem('usuario'))
-  if (userData) {
-    usuario.nome = userData.nome
-    usuario.nivel = userData.nivel
-    usuario.avatar = userData.avatar || '/avatar.png'
-  }
+    const userData = JSON.parse(localStorage.getItem('usuario'))
+    if (userData) {
+        usuario.nome = userData.nome
+        usuario.nivel = userData.nivel
+
+    const avatarPorNivel = {
+        Administrador: '/avatar-admin.png',
+        Técnico: '/avatar-tecnico.png',
+        Usuário: '/avatar-usuario.png'
+    }
+
+    // Se existir avatar personalizado → usa
+    // Senão, usa avatar com base no cargo
+    usuario.avatar = userData.avatar || avatarPorNivel[userData.nivel] || '/avatar.png'
+    }
 })
 
 function logout() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('usuario')
-  router.push('/login')
+    localStorage.removeItem('token')
+    localStorage.removeItem('usuario')
+    router.push('/login')
 }
 </script>
 
 <style scoped>
 .header {
-  height: 60px;
-  width: 100%;
-  background-color: #1a1a1a;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid #2c2c2c;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+    height: 60px;
+    width: 100%;
+    background-color: #1a1a1a;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid #2c2c2c;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .logo {
