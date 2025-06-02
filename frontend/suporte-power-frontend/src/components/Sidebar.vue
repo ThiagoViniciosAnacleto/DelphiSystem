@@ -1,6 +1,5 @@
 <template>
     <aside class="sidebar">
-        <img src="/logo.svg" alt="Power Vending" class="logo" />
         <nav>
             <ul>
                 <li><button>📂 Chamados Abertos</button></li>
@@ -26,11 +25,6 @@
   flex-direction: column;
   gap: 1rem;
   color: #fff;
-}
-
-.logo {
-  max-width: 150px;
-  margin-bottom: 2rem;
 }
 
 nav ul {
