@@ -1,7 +1,7 @@
 <template>
     <header class="header">
         <div class="left">
-        <!-- Espaço para futuro breadcrumb, etc. -->
+            <img src="/logo.png" alt="Power Vending" class="logo" />
         </div>
 
         <div class="right">
@@ -35,6 +35,10 @@ function logout() {
     justify-content: space-between;
     align-items: center;
     padding: 0 1.5rem;
+}
+
+.logo {
+    height: 36px;
 }
 
 .right {
