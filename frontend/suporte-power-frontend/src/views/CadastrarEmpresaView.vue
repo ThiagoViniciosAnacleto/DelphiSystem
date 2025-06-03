@@ -33,7 +33,7 @@ const headers = {
     Authorization: `Bearer ${localStorage.getItem('token')}`
 }
 
-// Lista empresas do backend
+// Lista empresas do backend.
 const carregarEmpresas = async () => {
     const res = await fetch(`${baseURL}/empresas`, { headers })
     empresas.value = await res.json()
