@@ -35,6 +35,12 @@
             <button type="button">🛠️ Cadastrar Máquina</button>
           </router-link>
         </li>
+        
+        <li>
+          <router-link to="/criar-origem-problema">
+            <button type="button">🛠️ Criar Origem Problema</button>
+          </router-link>
+        </li>
 
         <li>
           <router-link to="/cadastrar-usuario">

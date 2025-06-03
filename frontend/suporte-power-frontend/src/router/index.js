@@ -20,6 +20,7 @@ const routes = [
         { path: 'dashboard', component: DashboardView },
         { path: 'criar-chamados', component: () => import('@/views/CriarChamadoView.vue') },
         { path: 'cadastrar-empresa', component: () => import('@/views/CadastrarEmpresaView.vue') },
+        { path: 'criar-origem-problema', component: () => import('@/views/CriarOrigemProblemaView.vue') },
         { path: 'cadastrar-maquina', component: () => import('@/views/CadastrarMaquinaView.vue') },
         { path: 'cadastrar-usuario', component: () => import('@/views/CadastrarUsuarioView.vue') },
         { path: 'editar-privilegios', component: () => import('@/views/EditarPrivilegiosView.vue') },
