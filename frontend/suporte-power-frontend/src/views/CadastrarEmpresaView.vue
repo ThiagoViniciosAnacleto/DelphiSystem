@@ -33,13 +33,13 @@ const headers = {
 }
 
 const carregarEmpresas = async () => {
-    empresas.value = await fetch('/api/empresas', { headers }).then(res => res.json())
+    empresas.value = await fetch('/empresas', { headers }).then(res => res.json())
 }
 
 const salvarEmpresa = async () => {
     const url = editandoId.value
-        ? `/api/empresas/${editandoId.value}`
-        : '/api/empresas'
+        ? `/empresas${editandoId.value}`
+        : '/empresas'
 
     const method = editandoId.value ? 'PUT' : 'POST'
 
@@ -61,7 +61,7 @@ const editar = (empresa) => {
 
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta empresa?')) {
-        await fetch(`/api/empresas/${id}`, {
+        await fetch(`/empresas${id}`, {
         method: 'DELETE',
         headers
     })
