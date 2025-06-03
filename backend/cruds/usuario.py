@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 from backend.models import Usuario
 from backend.schemas import UsuarioCreate, UsuarioUpdate
-from werkzeug.security import generate_password_hash
+from backend.auth import gerar_hash_senha
 
 
 def criar_usuario(db: Session, dados: UsuarioCreate):
-    senha_hash = generate_password_hash(dados.senha)
+    senha_hash = gerar_hash_senha(dados.senha)
     novo_usuario = Usuario(nome=dados.nome, email=dados.email, senha_hash=senha_hash)
     db.add(novo_usuario)
     db.commit()
@@ -32,7 +32,7 @@ def atualizar_usuario(
     if usuario:
         dados_dict = dados.model_dump(exclude_unset=True)
         if "senha" in dados_dict:
-            dados_dict["senha_hash"] = generate_password_hash(dados_dict.pop("senha"))
+            dados_dict["senha_hash"] = gerar_hash_senha(dados_dict.pop("senha"))
         for campo, valor in dados_dict.items():
             setattr(usuario, campo, valor)
         db.commit()
