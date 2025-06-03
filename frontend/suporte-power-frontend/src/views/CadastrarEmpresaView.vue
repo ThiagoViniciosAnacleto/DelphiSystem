@@ -32,6 +32,7 @@ const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('token')}`
 }
+console.log("🚀 VITE_API_URL:", import.meta.env.VITE_API_URL)
 
 // Lista empresas do backend.
 const carregarEmpresas = async () => {
