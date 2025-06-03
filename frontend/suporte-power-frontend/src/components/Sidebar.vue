@@ -18,14 +18,14 @@
 
 <style scoped>
 .sidebar {
-  background-color: #1a1a1a;
+  background-color: #f8f9fa;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  color: #fff;
+  color: #212529;
   height: 100%;
-  border-right: 1px solid #2c2c2c;
+  border-right: 1px solid #dee2e6;
 }
 
 nav ul {
@@ -38,8 +38,8 @@ nav li button {
   width: 100%;
   padding: 0.6rem 1rem;
   margin-bottom: 0.4rem;
-  background-color: #2c2c2c;
-  color: white;
+  background-color: #e9ecef;
+  color: #212529;
   border: none;
   border-radius: 8px;
   text-align: left;
@@ -49,6 +49,7 @@ nav li button {
 }
 
 nav li button:hover {
-  background-color: #3d3d3d;
+  background-color: #dee2e6;
 }
 </style>
+
