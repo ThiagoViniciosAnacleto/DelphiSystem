@@ -1,20 +1,13 @@
 <template>
     <div class="maquinas">
-        <h2>Máquinas</h2>
+        <h2>Modelos de Máquinas</h2>
 
         <form @submit.prevent="salvarMaquina">
             <input
-                v-model="novaMaquina.modelo"
-                placeholder="Modelo da máquina"
-                required
+            v-model="novaMaquina.modelo"
+            placeholder="Nome ou modelo da máquina"
+            required
             />
-            <select v-model="novaMaquina.empresa_id" required>
-                <option disabled value="">Selecione a empresa</option>
-                <option v-for="e in empresas" :key="e.id" :value="e.id">
-                {{ e.nome }}
-                </option>
-            </select>
-
             <button type="submit">
                 {{ editandoId ? "Atualizar" : "Salvar" }}
             </button>
@@ -22,15 +15,14 @@
 
         <hr />
 
-        <h3>Máquinas Cadastradas</h3>
+        <h3>Modelos Cadastrados</h3>
         <ul>
             <li v-for="m in maquinas" :key="m.id">
-                <span>{{ m.modelo }} — {{ nomeEmpresa(m.empresa_id) }}</span>
-
-            <div class="acoes">
-                <button @click="editar(m)">✏️</button>
-                <button @click="deletar(m.id)">🗑️</button>
-            </div>
+                <span>{{ m.modelo }}</span>
+                <div class="acoes">
+                    <button @click="editar(m)">✏️</button>
+                    <button @click="deletar(m.id)">🗑️</button>
+                </div>
             </li>
         </ul>
     </div>
@@ -40,8 +32,7 @@
 import { ref, onMounted } from 'vue'
 
 const maquinas = ref([])
-const empresas = ref([])
-const novaMaquina = ref({ modelo: '', empresa_id: '' })
+const novaMaquina = ref({ modelo: '' })
 const editandoId = ref(null)
 
 const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
@@ -50,24 +41,17 @@ const headers = {
     Authorization: `Bearer ${localStorage.getItem('token')}`
 }
 
-// Carrega empresas
-const carregarEmpresas = async () => {
-    const res = await fetch(`${baseURL}/empresas/`, { headers })
-    empresas.value = await res.json()
-}
-
-// Carrega máquinas
+// Lista máquinas
 const carregarMaquinas = async () => {
     const res = await fetch(`${baseURL}/maquinas/`, { headers })
     maquinas.value = await res.json()
 }
 
-// Cria ou edita
+// Cria ou edita máquina
 const salvarMaquina = async () => {
     const url = editandoId.value
         ? `${baseURL}/maquinas/${editandoId.value}`
         : `${baseURL}/maquinas/`
-
     const method = editandoId.value ? 'PUT' : 'POST'
 
     await fetch(url, {
@@ -80,17 +64,16 @@ const salvarMaquina = async () => {
     carregarMaquinas()
 }
 
+// Preenche para edição
 const editar = (maquina) => {
-    novaMaquina.value = {
-    modelo: maquina.modelo,
-    empresa_id: maquina.empresa_id
-    }
+    novaMaquina.value = { modelo: maquina.modelo }
     editandoId.value = maquina.id
 }
 
+// Deleta
 const deletar = async (id) => {
-    if (confirm('Deseja desativar esta máquina?')) {
-    await fetch(`${baseURL}/maquinas/${id}`, {
+    if (confirm('Deseja desativar este modelo de máquina?')) {
+        await fetch(`${baseURL}/maquinas/${id}`, {
         method: 'DELETE',
         headers
     })
@@ -98,20 +81,13 @@ const deletar = async (id) => {
     }
 }
 
-const nomeEmpresa = (id) => {
-    const empresa = empresas.value.find(e => e.id === id)
-    return empresa ? empresa.nome : 'Desconhecida'
-}
-
+// Limpa form
 const resetarFormulario = () => {
-    novaMaquina.value = { modelo: '', empresa_id: '' }
+    novaMaquina.value = { modelo: '' }
     editandoId.value = null
 }
 
-onMounted(() => {
-    carregarEmpresas()
-    carregarMaquinas()
-})
+onMounted(carregarMaquinas)
 </script>
 
 <style scoped>
@@ -134,16 +110,14 @@ form {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    flex-wrap: wrap;
 }
 
-input, select {
+input {
     flex: 1;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
     font-size: 16px;
-    min-width: 250px;
 }
 
 button {
