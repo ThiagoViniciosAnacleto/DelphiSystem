@@ -79,6 +79,7 @@ from .usuario import (
     buscar_usuario_por_id,
     atualizar_usuario,
     deletar_usuario,
+    get_usuario_por_email,
 )
 
 __all__ = [
@@ -147,4 +148,5 @@ __all__ = [
     "buscar_usuario_por_id",
     "atualizar_usuario",
     "deletar_usuario",
+    "get_usuario_por_email",
 ]
