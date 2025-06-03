@@ -37,7 +37,7 @@ console.log("🚀 VITE_API_URL:", import.meta.env.VITE_API_URL)
 // Lista empresas do backend.
 const carregarEmpresas = async () => {
     try {
-    const res = await fetch(`${baseURL}/empresas`, { headers })
+    const res = await fetch(`${baseURL}/empresas/`, { headers })
     empresas.value = await res.json()
     } catch (err) {
     console.error("Erro ao carregar empresas:", err)
@@ -48,7 +48,7 @@ const carregarEmpresas = async () => {
 const salvarEmpresa = async () => {
     const url = editandoId.value
         ? `${baseURL}/empresas/${editandoId.value}`
-        : `${baseURL}/empresas`
+        : `${baseURL}/empresas/`
 
     const method = editandoId.value ? 'PUT' : 'POST'
 
@@ -71,7 +71,7 @@ const editar = (empresa) => {
 // Desativa a empresa
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta empresa?')) {
-        await fetch(`${baseURL}/empresas/${id}`, {
+        await fetch(`${baseURL}/empresas/${id}/`, {
         method: 'DELETE',
         headers
     })
