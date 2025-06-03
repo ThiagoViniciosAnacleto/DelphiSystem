@@ -2,15 +2,57 @@
   <aside class="sidebar">
     <nav>
       <ul>
-        <li><button>📂 Chamados Abertos</button></li>
-        <li><button>➕ Abrir Novo Chamado</button></li>
-        <li><button>📋 Lista de Chamados</button></li>
-        <li><button>📊 Dashboard</button></li>
-        <li><button>🏢 Cadastrar Empresa</button></li>
-        <li><button>🛠️ Cadastrar Máquina</button></li>
-        <li><button>👤 Cadastrar Usuário</button></li>
-        <li><button>✏️ Editar Privilégios</button></li>
-        <li><button>♻️ Chamados Recorrentes</button></li>
+        <li>
+          <button type="button">📂 Chamados Abertos</button>
+        </li>
+
+        <li>
+          <router-link to="/criar-chamados">
+            <button type="button">➕ Abrir Novo Chamado</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/lista-chamados">
+            <button type="button">📋 Lista de Chamados</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/dashboard">
+            <button type="button">📊 Dashboard</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/cadastrar-empresa">
+            <button type="button">🏢 Cadastrar Empresa</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/cadastrar-maquina">
+            <button type="button">🛠️ Cadastrar Máquina</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/cadastrar-usuario">
+            <button type="button">👤 Cadastrar Usuário</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/editar-privilegios">
+            <button type="button">✏️ Editar Privilégios</button>
+          </router-link>
+        </li>
+
+        <li>
+          <router-link to="/chamados-recorrentes">
+            <button type="button">♻️ Chamados Recorrentes</button>
+          </router-link>
+        </li>
       </ul>
     </nav>
   </aside>
