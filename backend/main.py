@@ -396,14 +396,15 @@ def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db), usuario
     existente = cruds.get_usuario_por_email(db, email=usuario.email)
     if existente:
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-    return cruds.criar_usuario(db, usuario.nome, usuario.email, usuario.senha)
+    return cruds.criar_usuario(db, usuario)
 
 @app.put("/usuarios/{usuario_id}", response_model=UsuarioOut)
 def atualizar_usuario(usuario_id: int, dados: UsuarioUpdate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    atualizado = cruds.atualizar_usuario(db, usuario_id, nome=dados.nome, email=dados.email, senha=dados.senha)
+    atualizado = cruds.atualizar_usuario(db, usuario_id, dados)
     if not atualizado:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return atualizado
+
 
 @app.delete("/usuarios/{usuario_id}")
 def deletar_usuario(usuario_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
