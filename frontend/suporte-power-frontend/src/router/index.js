@@ -18,6 +18,7 @@ const routes = [
     children: [
         { path: '', redirect: '/dashboard' },
         { path: 'dashboard', component: DashboardView },
+        { path: 'criar-chamados', component: () => import('@/views/CriarChamadosView.vue') },
         { path: 'cadastrar-empresa', component: () => import('@/views/CadastrarEmpresaView.vue') },
         { path: 'cadastrar-maquina', component: () => import('@/views/CadastrarMaquinaView.vue') },
         { path: 'cadastrar-usuario', component: () => import('@/views/CadastrarUsuarioView.vue') },
