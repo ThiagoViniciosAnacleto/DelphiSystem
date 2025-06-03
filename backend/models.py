@@ -104,6 +104,7 @@ class Empresa(Base, SoftDeleteMixin):
         TIMESTAMP, nullable=False, server_default=func.now()
     )
 
+    maquinas = relationship("Maquina", back_populates="empresa")
     chamados = relationship("Chamado", back_populates="empresa")
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="empresa")
 
@@ -114,6 +115,9 @@ class Maquina(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     modelo = Column(String(150), unique=True, nullable=False)
+
+    empresa_id = Column(Integer, ForeignKey("empresas.id"), nullable=False)
+    empresa = relationship("Empresa", back_populates="maquinas")
 
     chamados = relationship("Chamado", back_populates="tipo_maquina")
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="tipo_maquina")
