@@ -13,8 +13,8 @@ def criar_usuario(db: Session, dados: UsuarioCreate):
     return novo_usuario
 
 
-def listar_usuarios(db: Session) -> list[Usuario]:
-    return db.query(Usuario).filter(Usuario.ativo == True).all()
+def listar_usuarios(db: Session, skip: int = 0, limit: int = 100) -> list[Usuario]:
+    return db.query(Usuario).filter(Usuario.ativo == True).offset(skip).limit(limit).all()
 
 
 def buscar_usuario_por_id(db: Session, usuario_id: int) -> Usuario | None:
