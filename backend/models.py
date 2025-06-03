@@ -116,12 +116,8 @@ class Maquina(Base):
     id = Column(Integer, primary_key=True, index=True)
     modelo = Column(String(150), unique=True, nullable=False)
 
-    empresa_id = Column(Integer, ForeignKey("empresas.id"), nullable=False)
-    empresa = relationship("Empresa", back_populates="maquinas")
-
     chamados = relationship("Chamado", back_populates="tipo_maquina")
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="tipo_maquina")
-
 
 class OrigemProblema(Base):
     """Tabela de origens de problemas relatados."""
