@@ -60,23 +60,27 @@ const fazerLogin = async () => {
     try {
         const response = await api.post(
         '/login',
-            qs.stringify({
+        qs.stringify({
             username: username.value,
             password: password.value
         }),
         {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
-        }
+            }
         }
     )
 
     const token = response.data.access_token
+    const usuario = response.data.usuario
+
+    // ✅ Salva no localStorage
     localStorage.setItem('token', token)
+    localStorage.setItem('usuario', JSON.stringify(usuario)) // <-- ESSENCIAL
 
     router.push('/dashboard')
     } catch (err) {
-    erro.value = 'Usuário ou senha inválidos'
+        erro.value = 'Usuário ou senha inválidos'
     }
 }
 </script>
