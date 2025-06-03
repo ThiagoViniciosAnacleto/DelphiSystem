@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from backend.database import SessionLocal
 from backend import models
+from sqlalchemy.orm import joinedload
 
 # Carrega variáveis de ambiente com base no modo
 modo = os.getenv("MODO", "DEV")
@@ -41,10 +42,21 @@ def gerar_hash_senha(senha: str) -> str:
     return pwd_context.hash(senha)
 
 def autenticar_usuario(db: Session, email: str, senha: str) -> Optional[models.Usuario]:
-    usuario = db.query(models.Usuario).filter(models.Usuario.email == email, models.Usuario.ativo == True).first()
+    """Autentica um usuário verificando email, senha e se está ativo.
+    Carrega também o relacionamento com o cargo (role).
+    """
+    usuario = (
+        db.query(models.Usuario)
+        .options(joinedload(models.Usuario.role))  # Garante que usuario.role.nome esteja disponível
+        .filter(models.Usuario.email == email, models.Usuario.ativo == True)
+        .first()
+    )
+
     if not usuario or not verificar_senha(senha, usuario.senha_hash):
         return None
+
     return usuario
+
 
 def criar_token_acesso(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
