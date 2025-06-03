@@ -104,7 +104,6 @@ class Empresa(Base, SoftDeleteMixin):
         TIMESTAMP, nullable=False, server_default=func.now()
     )
 
-    maquinas = relationship("Maquina", back_populates="empresa")
     chamados = relationship("Chamado", back_populates="empresa")
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="empresa")
 
