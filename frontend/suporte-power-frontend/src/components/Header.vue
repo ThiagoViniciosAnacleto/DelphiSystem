@@ -37,9 +37,17 @@ const usuario = reactive({
 
 onMounted(() => {
     const userData = JSON.parse(localStorage.getItem('usuario'))
-    if (userData) {
-        usuario.nome = userData.nome
-        usuario.nivel = userData.nivel
+        if (userData) {
+            usuario.nome = userData.nome
+
+    // Converte cargo em texto legível
+    const nivelMap = {
+        admin: 'Administrador',
+        tecnico: 'Técnico',
+        comum: 'Usuário'
+    }
+
+    usuario.nivel = nivelMap[userData.role] || 'Usuário'
 
     const avatarPorNivel = {
         Administrador: '/avatar-admin.png',
@@ -47,9 +55,7 @@ onMounted(() => {
         Usuário: '/avatar-usuario.png'
     }
 
-    // Se existir avatar personalizado → usa
-    // Senão, usa avatar com base no cargo
-    usuario.avatar = userData.avatar || avatarPorNivel[userData.nivel] || '/avatar.png'
+    usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
     }
 })
 
