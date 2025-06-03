@@ -9,6 +9,7 @@ import backend.cruds as cruds
 from backend.schemas import *
 from backend.utils import hash_senha
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
@@ -16,7 +17,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://suporte-power-dev.netlify.app"],
+    allow_origin_regex="https://suporte-power-dev\.netlify\.app/?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
