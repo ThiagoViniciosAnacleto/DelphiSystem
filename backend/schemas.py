@@ -57,18 +57,20 @@ class EmpresaOut(EmpresaBase):
 # ---------- Maquina ----------
 class MaquinaBase(BaseModel):
     modelo: str
+    empresa_id: int
 
 class MaquinaCreate(MaquinaBase):
     pass
 
 class MaquinaUpdate(BaseModel):
     modelo: Optional[str] = None
+    empresa_id: Optional[int] = None
 
 class MaquinaOut(MaquinaBase):
     id: int
+
     class Config:
         from_attributes = True
-
 
 # ---------- OrigemProblema ----------
 class OrigemProblemaBase(BaseModel):
