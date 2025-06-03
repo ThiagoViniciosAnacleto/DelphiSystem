@@ -36,32 +36,41 @@ const usuario = reactive({
 })
 
 onMounted(() => {
-    const userData = JSON.parse(localStorage.getItem('usuario'))
-    console.log('[DEBUG] userData:', userData)
+    const raw = localStorage.getItem('usuario')
+    console.log('[DEBUG] RAW usuario from localStorage:', raw)
 
-    if (userData) {
-        usuario.nome = userData.nome
+    try {
+        const userData = JSON.parse(raw)
+        console.log('[DEBUG] Parsed userData:', userData)
 
-        const nivelMap = {
-            admin: 'Administrador',
-            tecnico: 'Técnico',
-            comum: 'Usuário'
-        }
+        if (userData) {
+            usuario.nome = userData.nome
 
-        const role = userData.role || 'comum'
-        usuario.nivel = nivelMap[role] || 'Usuário'
+            const nivelMap = {
+                admin: 'Administrador',
+                tecnico: 'Técnico',
+                comum: 'Usuário'
+            }
 
-        const avatarPorNivel = {
-            Administrador: '/avatar-admin.png',
-            Técnico: '/avatar-tecnico.png',
-            Usuário: '/avatar-usuario.png'
-        }
+            const avatarPorNivel = {
+                Administrador: '/avatar-admin.png',
+                Técnico: '/avatar-tecnico.png',
+                Usuário: '/avatar-usuario.png'
+            }
 
-        usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
-        console.log('[DEBUG] usuario.nivel:', usuario.nivel)
-        console.log('[DEBUG] usuario.avatar final:', usuario.avatar)
-        }
+            const role = userData.role || 'comum'
+                usuario.nivel = nivelMap[role] || 'Usuário'
+                usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
+
+                console.log('[DEBUG] role recebido:', userData.role)
+                console.log('[DEBUG] usuario.nivel:', usuario.nivel)
+                console.log('[DEBUG] usuario.avatar final:', usuario.avatar)
+            }
+            } catch (err) {
+            console.error('Erro ao fazer parse do usuário:', err)
+            }
 })
+
 
 
 function logout() {
