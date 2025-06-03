@@ -141,7 +141,7 @@ class ChamadoBase(BaseModel):
     porta_ssh: Optional[str] = None
     descricao_acao: Optional[str] = None
     prioridade_id: Optional[int] = None
-    status_id: Optional[int] = None
+    status_id: Optional[int] = 1
     empresa_id: Optional[int] = None
     tipo_maquina_id: Optional[int] = None
     origem_id: Optional[int] = None
