@@ -40,26 +40,27 @@ onMounted(() => {
     console.log('[DEBUG] userData:', userData)
 
     if (userData) {
-    usuario.nome = userData.nome
+        usuario.nome = userData.nome
 
-    const nivelMap = {
-        admin: 'Administrador',
-        tecnico: 'Técnico',
-        comum: 'Usuário'
-    }
+        const nivelMap = {
+            admin: 'Administrador',
+            tecnico: 'Técnico',
+            comum: 'Usuário'
+        }
 
-    const avatarPorNivel = {
-        Administrador: '/avatar-admin.png',
-        Técnico: '/avatar-tecnico.png',
-        Usuário: '/avatar-usuario.png'
-    }
+        const role = userData.role || 'comum'
+        usuario.nivel = nivelMap[role] || 'Usuário'
 
-    usuario.nivel = nivelMap[userData.role] || 'Usuário'
-    console.log('[DEBUG] usuario.nivel:', usuario.nivel)
+        const avatarPorNivel = {
+            Administrador: '/avatar-admin.png',
+            Técnico: '/avatar-tecnico.png',
+            Usuário: '/avatar-usuario.png'
+        }
 
-    usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
-    console.log('[DEBUG] usuario.avatar final:', usuario.avatar)
-    }
+        usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
+        console.log('[DEBUG] usuario.nivel:', usuario.nivel)
+        console.log('[DEBUG] usuario.avatar final:', usuario.avatar)
+        }
 })
 
 

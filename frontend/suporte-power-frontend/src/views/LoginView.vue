@@ -74,9 +74,8 @@ const fazerLogin = async () => {
     const token = response.data.access_token
     const usuario = response.data.usuario
 
-    // ✅ Salva no localStorage
     localStorage.setItem('token', token)
-    localStorage.setItem('usuario', JSON.stringify(usuario)) // <-- ESSENCIAL
+    localStorage.setItem('usuario', JSON.stringify(usuario))
 
     router.push('/dashboard')
     } catch (err) {
