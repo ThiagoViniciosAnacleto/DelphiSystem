@@ -42,9 +42,21 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = criar_token_acesso(
-        data={"sub": usuario.email}, expires_delta=access_token_expires
+    data={
+        "sub": usuario.email,
+        "nome": usuario.nome,
+        "role": usuario.role
+    },
+    expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+    "access_token": access_token,
+    "token_type": "bearer",
+    "usuario": {
+        "nome": usuario.nome,
+        "role": usuario.role
+    }
+    }
 
 # ---------------------- EMPRESAS ----------------------
 @app.get("/empresas/", response_model=List[EmpresaOut])
