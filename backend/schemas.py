@@ -14,6 +14,10 @@ class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[EmailStr] = None
     senha: Optional[str] = None
+    role_id: Optional[int]
+    
+        class Config:
+        orm_mode = True
 
 class UsuarioOut(UsuarioBase):
     id: int
