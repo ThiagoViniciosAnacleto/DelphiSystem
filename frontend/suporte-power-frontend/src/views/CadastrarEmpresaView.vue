@@ -71,7 +71,7 @@ const editar = (empresa) => {
 // Desativa a empresa
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta empresa?')) {
-        await fetch(`${baseURL}/empresas/${id}/`, {
+        await fetch(`${baseURL}/empresas/${id}`, {
         method: 'DELETE',
         headers
     })
