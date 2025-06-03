@@ -1,3 +1,3 @@
 <template>
-    <div style="color: white">Página em construção: Chamados Recorrentes</div>
+    <div style="color: black">Página em construção: Chamados Recorrentes</div>
 </template>

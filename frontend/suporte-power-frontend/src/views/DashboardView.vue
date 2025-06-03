@@ -1,3 +1,3 @@
 <template>
-    <div style="color: white">Dashboard - em construção</div>
+    <div style="color: black">Dashboard - em construção</div>
 </template>

@@ -1,3 +1,3 @@
 <template>
-    <div style="color: white">Página em construção: Cadastrar Empresa</div>
+    <div style="color: black">Página em construção: Cadastrar Empresa</div>
 </template>

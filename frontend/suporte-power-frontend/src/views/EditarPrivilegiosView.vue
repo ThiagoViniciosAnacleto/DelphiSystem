@@ -1,3 +1,3 @@
 <template>
-    <div style="color: white">Página em construção: Editar Privilegios</div>
+    <div style="color: black">Página em construção: Editar Privilegios</div>
 </template>
