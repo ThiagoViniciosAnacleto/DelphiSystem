@@ -39,7 +39,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     usuario = autenticar_usuario(db, form_data.username, form_data.password)
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuário ou senha inválidos")
-
+    
+    print(f"[DEBUG] usuario.role: {usuario.role.nome if usuario.role else 'None'}")
     # Se não tiver cargo vinculado, assume 'comum'
     role_final = usuario.role.nome if usuario.role else "comum"
 
@@ -61,7 +62,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             "role": role_final
         }
     }
-
 
 # ---------------------- EMPRESAS ----------------------
 @app.get("/empresas/", response_model=List[EmpresaOut])
