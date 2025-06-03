@@ -40,23 +40,28 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuário ou senha inválidos")
 
+    # Se não tiver cargo vinculado, assume 'comum'
+    role_final = usuario.role.nome if usuario.role else "comum"
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = criar_token_acesso(
-    data={
-        "sub": usuario.email,
-        "nome": usuario.nome,
-        "role": usuario.role
-    },
-    expires_delta=access_token_expires
+        data={
+            "sub": usuario.email,
+            "nome": usuario.nome,
+            "role": role_final
+        },
+        expires_delta=access_token_expires
     )
+
     return {
-    "access_token": access_token,
-    "token_type": "bearer",
-    "usuario": {
-        "nome": usuario.nome,
-        "role": usuario.role
+        "access_token": access_token,
+        "token_type": "bearer",
+        "usuario": {
+            "nome": usuario.nome,
+            "role": role_final
+        }
     }
-    }
+
 
 # ---------------------- EMPRESAS ----------------------
 @app.get("/empresas/", response_model=List[EmpresaOut])
