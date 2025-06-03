@@ -21,6 +21,10 @@ def buscar_usuario_por_id(db: Session, usuario_id: int) -> Usuario | None:
     return db.query(Usuario).filter(Usuario.id == usuario_id, Usuario.ativo == True).first()
 
 
+def get_usuario_por_email(db: Session, email: str) -> Usuario | None:
+    return db.query(Usuario).filter(Usuario.email == email, Usuario.ativo == True).first()
+
+
 def atualizar_usuario(
     db: Session, usuario_id: int, dados: UsuarioUpdate
 ) -> Usuario | None:
