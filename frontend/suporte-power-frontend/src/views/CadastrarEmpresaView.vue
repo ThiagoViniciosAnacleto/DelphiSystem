@@ -4,8 +4,8 @@
 
         <form @submit.prevent="salvarEmpresa">
             <input v-model="novaEmpresa.nome" placeholder="Nome da empresa" required />
-                <button type="submit">Salvar</button>
-            </form>
+            <button type="submit">Salvar</button>
+        </form>
 
         <hr />
 
@@ -27,46 +27,57 @@ const empresas = ref([])
 const novaEmpresa = ref({ nome: '' })
 const editandoId = ref(null)
 
+const baseURL = import.meta.env.VITE_API_URL
 const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('token')}`
 }
 
+// Lista empresas do backend
 const carregarEmpresas = async () => {
-    empresas.value = await fetch('/empresas', { headers }).then(res => res.json())
+    const res = await fetch(`${baseURL}/empresas`, { headers })
+    empresas.value = await res.json()
 }
 
+// Cria ou atualiza uma empresa
 const salvarEmpresa = async () => {
     const url = editandoId.value
-        ? `/empresas${editandoId.value}`
-        : '/empresas'
+        ? `${baseURL}/empresas/${editandoId.value}`
+        : `${baseURL}/empresas`
 
     const method = editandoId.value ? 'PUT' : 'POST'
 
     await fetch(url, {
-    method,
-    headers,
-    body: JSON.stringify(novaEmpresa.value)
+        method,
+        headers,
+        body: JSON.stringify(novaEmpresa.value)
 })
 
-    novaEmpresa.value = { nome: '' }
-    editandoId.value = null
+    resetarFormulario()
     carregarEmpresas()
 }
 
+// Preenche o form para edição
 const editar = (empresa) => {
     novaEmpresa.value = { nome: empresa.nome }
     editandoId.value = empresa.id
 }
 
+// Desativa a empresa
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta empresa?')) {
-        await fetch(`/empresas${id}`, {
+        await fetch(`${baseURL}/empresas/${id}`, {
         method: 'DELETE',
         headers
     })
     carregarEmpresas()
     }
+}
+
+// Limpa o formulário
+const resetarFormulario = () => {
+    novaEmpresa.value = { nome: '' }
+    editandoId.value = null
 }
 
 onMounted(() => {
