@@ -22,6 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+print("🚀 CORS configurado com:", r"^https://suporte-power-dev\.netlify\.app$")
+
 def get_db():
     db = SessionLocal()
     try:
@@ -66,6 +68,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 # ---------------------- EMPRESAS ----------------------
 @app.get("/empresas/", response_model=List[EmpresaOut])
 def listar_empresas(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    print("🛰️ Requisição recebida em /empresas")
     return cruds.listar_empresas(db)
 
 @app.get("/empresas/{empresa_id}", response_model=EmpresaOut)
