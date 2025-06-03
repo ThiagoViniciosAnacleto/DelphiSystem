@@ -84,13 +84,13 @@ function logout() {
 .header {
     height: 60px;
     width: 100%;
-    background-color: #1a1a1a;
-    color: white;
+    background-color: #f8f9fa;
+    color: #212529;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 1.5rem;
-    border-bottom: 1px solid #2c2c2c;
+    border-bottom: 1px solid #dee2e6;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -148,10 +148,12 @@ function logout() {
 
 .usuario-nome {
     font-weight: bold;
+    color: #212529;
 }
 
 .usuario-cargo {
     font-size: 12px;
-    color: #ccc;
+    color: #6c757d;
 }
 </style>
+
