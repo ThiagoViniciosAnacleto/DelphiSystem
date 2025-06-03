@@ -40,7 +40,7 @@ const headers = {
 
 const carregarOrigens = async () => {
     try {
-        const res = await fetch(`${baseURL}/origens-problema`, { headers })
+        const res = await fetch(`${baseURL}/origens_problema/`, { headers })
         origens.value = await res.json()
     } catch (err) {
     console.error('Erro ao carregar origens:', err)
@@ -49,8 +49,8 @@ const carregarOrigens = async () => {
 
 const salvarOrigem = async () => {
     const url = editandoId.value
-        ? `${baseURL}/origens-problema/${editandoId.value}`
-        : `${baseURL}/origens-problema`
+        ? `${baseURL}/origens_problema/${editandoId.value}`
+        : `${baseURL}/origens_problema/`
 
     const method = editandoId.value ? 'PUT' : 'POST'
 
@@ -71,7 +71,7 @@ const editar = (origem) => {
 
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta origem?')) {
-        await fetch(`${baseURL}/origens-problema/${id}`, {
+        await fetch(`${baseURL}/origens_problema/${id}`, {
         method: 'DELETE',
         headers
     })

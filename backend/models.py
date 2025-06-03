@@ -124,6 +124,7 @@ class OrigemProblema(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(150), unique=True, nullable=False)
+    ativo = Column(Boolean, nullable=False, default=True)
 
     chamados = relationship("Chamado", back_populates="origem")
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="origem")
