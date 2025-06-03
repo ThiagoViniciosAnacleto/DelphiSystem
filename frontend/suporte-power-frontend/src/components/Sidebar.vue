@@ -43,6 +43,12 @@
         </li>
 
         <li>
+          <router-link to="/cadastrar-prioridade">
+            <button type="button">⚠️ Cadastrar Prioridade</button>
+          </router-link>
+        </li>
+
+        <li>
           <router-link to="/cadastrar-usuario">
             <button type="button">👤 Cadastrar Usuário</button>
           </router-link>
