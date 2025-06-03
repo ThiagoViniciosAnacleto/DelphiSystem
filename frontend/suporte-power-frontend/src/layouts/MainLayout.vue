@@ -34,7 +34,8 @@
 .content {
   padding: 1rem;
   overflow-y: auto;
-  background-color: #121212;
-  color: #fff;
+  background-color: #ffffff; 
+  color: #212529;
 }
 </style>
+
