@@ -16,13 +16,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https://suporte-power-dev\.netlify\.app$",
+    allow_origins=["https://suporte-power-dev.netlify.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-print("🚀 CORS configurado com:", r"^https://suporte-power-dev\.netlify\.app$")
 
 def get_db():
     db = SessionLocal()
@@ -30,21 +28,7 @@ def get_db():
         yield db
     finally:
         db.close()
-
-from fastapi.responses import JSONResponse
-
-@app.options("/{full_path:path}")
-async def preflight_handler(full_path: str):
-    return JSONResponse(
-        status_code=200,
-        content=None,
-        headers={
-            "Access-Control-Allow-Origin": "https://suporte-power-dev.netlify.app",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-        },
-    )
-
+        
 # ---------------------- LOGIN ----------------------
 from fastapi.security import OAuth2PasswordRequestForm
 from backend.auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
