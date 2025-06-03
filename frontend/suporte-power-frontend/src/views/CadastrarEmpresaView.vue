@@ -27,7 +27,7 @@ const empresas = ref([])
 const novaEmpresa = ref({ nome: '' })
 const editandoId = ref(null)
 
-const baseURL = import.meta.env.VITE_API_URL
+const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
 const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -36,8 +36,12 @@ console.log("🚀 VITE_API_URL:", import.meta.env.VITE_API_URL)
 
 // Lista empresas do backend.
 const carregarEmpresas = async () => {
+    try {
     const res = await fetch(`${baseURL}/empresas`, { headers })
     empresas.value = await res.json()
+    } catch (err) {
+    console.error("Erro ao carregar empresas:", err)
+    }
 }
 
 // Cria ou atualiza uma empresa
