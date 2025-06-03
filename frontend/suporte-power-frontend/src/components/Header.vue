@@ -37,17 +37,16 @@ const usuario = reactive({
 
 onMounted(() => {
     const userData = JSON.parse(localStorage.getItem('usuario'))
-        if (userData) {
-            usuario.nome = userData.nome
+    console.log('[DEBUG] userData:', userData)
 
-    // Converte cargo em texto legível
+    if (userData) {
+    usuario.nome = userData.nome
+
     const nivelMap = {
         admin: 'Administrador',
         tecnico: 'Técnico',
         comum: 'Usuário'
     }
-
-    usuario.nivel = nivelMap[userData.role] || 'Usuário'
 
     const avatarPorNivel = {
         Administrador: '/avatar-admin.png',
@@ -55,9 +54,14 @@ onMounted(() => {
         Usuário: '/avatar-usuario.png'
     }
 
+    usuario.nivel = nivelMap[userData.role] || 'Usuário'
+    console.log('[DEBUG] usuario.nivel:', usuario.nivel)
+
     usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
+    console.log('[DEBUG] usuario.avatar final:', usuario.avatar)
     }
 })
+
 
 function logout() {
     localStorage.removeItem('token')
