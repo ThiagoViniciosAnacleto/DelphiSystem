@@ -408,9 +408,9 @@ async def atualizar_usuario(
     usuario_id: int,
     dados: UsuarioUpdate,
     db: Session = Depends(get_db),
-    usuario_autenticado: models.Usuario = Depends(get_current_user) # Apenas autenticação, sem RoleChecker direto no decorator
+    usuario_autenticado: models.Usuario = Depends(get_current_user)
 ):
-    usuario_db = cruds.get_usuario(db, usuario_id)
+    usuario_db = cruds.buscar_usuario_por_id(db, usuario_id)
     if not usuario_db:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
