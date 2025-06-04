@@ -1,15 +1,15 @@
 import os
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from dotenv import load_dotenv
+
 from backend.database import SessionLocal
 from backend import models
-from sqlalchemy.orm import joinedload
 
 # Carrega variáveis de ambiente com base no modo
 modo = os.getenv("MODO", "DEV")
@@ -94,6 +94,21 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return usuario
 
+class RoleChecker:
+    def __init__(self, allowed_roles: List[str]):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: models.Usuario = Depends(get_current_user)):
+        user_role_name = "comum"
+        if current_user.role and current_user.role.nome:
+            user_role_name = current_user.role.nome
+
+        if user_role_name not in self.allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Acesso negado. Requer uma das seguintes roles: {', '.join(self.allowed_roles)}"
+            )
+        return current_user # Retorna o usuário para que possa ser usado no endpoint se necessário
 
 import smtplib
 from email.mime.text import MIMEText

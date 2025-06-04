@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
-from backend.auth import get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
+from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
+import backend.models as models
 import backend.cruds as cruds
 from backend.schemas import *
 from backend.utils import hash_senha
@@ -29,6 +30,10 @@ def get_db():
     finally:
         db.close()
         
+
+admin_only = RoleChecker(["admin"])
+tecnico_ou_admin = RoleChecker(["admin", "tecnico"])
+
 # ---------------------- LOGIN ----------------------
 from fastapi.security import OAuth2PasswordRequestForm
 from backend.auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -392,7 +397,7 @@ def obter_usuario(usuario_id: int, db: Session = Depends(get_db), usuario: Usuar
     return usuario_obj
 
 @app.post("/usuarios/", response_model=UsuarioOut)
-def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db), usuario_autenticado: UsuarioOut = Depends(get_current_user)):
+def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db), usuario_autenticado: models.Usuario = Depends(admin_only)):
     existente = cruds.get_usuario_por_email(db, email=usuario.email)
     if existente:
         raise HTTPException(status_code=400, detail="Email já cadastrado")
