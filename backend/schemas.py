@@ -7,8 +7,11 @@ class UsuarioBase(BaseModel):
     nome: str
     email: EmailStr
 
-class UsuarioCreate(UsuarioBase):
+class UsuarioCreate(BaseModel):
+    nome: str
+    email: EmailStr
     senha: str
+    role_id: Optional[int] = None
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
