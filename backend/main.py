@@ -444,7 +444,7 @@ def deletar_usuario(
     usuario_autenticado: models.Usuario = Depends(admin_only) # Apenas admin
 ):
     # Opcional: Impedir que um admin se auto-delete ou delete outro admin por engano
-    usuario_a_deletar = cruds.get_usuario(db, usuario_id)
+    usuario_a_deletar = cruds.buscar_usuario_por_id(db, usuario_id)
     if usuario_a_deletar and usuario_a_deletar.role.nome == "admin" and usuario_autenticado.id != usuario_a_deletar.id:
         pass
     sucesso = cruds.deletar_usuario(db, usuario_id)
