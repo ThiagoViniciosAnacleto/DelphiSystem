@@ -1,11 +1,13 @@
 <template>
     <div class="usuarios">
-        <h2>Cadastro de Usuário</h2>
+        <h2>{{ editandoId ? "Atualizar Usuário" : "Cadastro de Usuário" }}</h2>
 
         <form @submit.prevent="salvarUsuario">
             <input v-model="usuario.nome" placeholder="Nome completo" required />
             <input v-model="usuario.email" type="email" placeholder="E-mail" required />
-            <input v-model="usuario.senha" type="password" placeholder="Senha" required />
+            
+            <input v-model="usuario.senha" type="password" placeholder="Senha" :required="!editandoId" />
+            
             <select v-model="usuario.role_id" required>
                 <option value="" disabled>Selecione o perfil</option>
                 <option v-for="r in roles" :value="r.id" :key="r.id">{{ r.nome }}</option>
@@ -14,6 +16,9 @@
             <button type="submit">
                 {{ editandoId ? "Atualizar" : "Cadastrar" }}
             </button>
+            <button v-if="editandoId" type="button" @click="resetarFormulario" style="background-color: #6c757d; margin-top: 5px;">
+                Cancelar Edição
+            </button>
         </form>
 
         <hr />
@@ -21,7 +26,7 @@
         <h3>Usuários Cadastrados</h3>
         <ul>
             <li v-for="u in usuarios" :key="u.id">
-                <span>{{ u.nome }} ({{ u.email }})</span>
+                <span>{{ u.nome }} ({{ u.email }}) - Perfil: {{ u.role?.nome || 'Não definido' }}</span>
                 <div class="acoes">
                     <button @click="editar(u)">✏️</button>
                     <button @click="deletar(u.id)">🗑️</button>
@@ -36,6 +41,7 @@ import { ref, onMounted } from 'vue'
 
 const usuarios = ref([])
 const roles = ref([])
+// Inicialize a senha como vazia para evitar que seja enviada por padrão em edições
 const usuario = ref({ nome: '', email: '', senha: '', role_id: '' })
 const editandoId = ref(null)
 
@@ -46,13 +52,24 @@ const headers = {
 }
 
 const carregarUsuarios = async () => {
-    const res = await fetch(`${baseURL}/usuarios/`, { headers })
-    usuarios.value = await res.json()
+    try {
+        const res = await fetch(`${baseURL}/usuarios/`, { headers })
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        usuarios.value = await res.json()
+    } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+    }
 }
 
+
 const carregarRoles = async () => {
-    const res = await fetch(`${baseURL}/roles/`, { headers })
-    roles.value = await res.json()
+    try {
+        const res = await fetch(`${baseURL}/roles/`, { headers })
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        roles.value = await res.json()
+    } catch (error) {
+        console.error("Erro ao carregar roles:", error);
+    }
 }
 
 const salvarUsuario = async () => {
@@ -62,21 +79,46 @@ const salvarUsuario = async () => {
 
     const method = editandoId.value ? 'PUT' : 'POST'
 
-    await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(usuario.value)
-    })
+    // --- CHAVE DA REFACTOR AQUI ---
+    // Cria um payload específico para a requisição
+    const payload = {
+        nome: usuario.value.nome,
+        email: usuario.value.email,
+        role_id: usuario.value.role_id,
+        // Adiciona a senha APENAS se for uma criação OU se o campo de senha foi preenchido
+        // na edição (assumindo que o usuário quer mudar a senha)
+        ...(usuario.value.senha && { senha: usuario.value.senha }) // Condicionalmente adiciona a senha
+    };
 
-    resetarFormulario()
-    carregarUsuarios()
+    try {
+        const res = await fetch(url, {
+            method,
+            headers,
+            body: JSON.stringify(payload) // Envia o payload construído
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.detail || `Erro HTTP: ${res.status}`);
+        }
+
+        alert(`Usuário ${editandoId.value ? 'atualizado' : 'cadastrado'} com sucesso!`);
+    } catch (error) {
+        console.error("Erro ao salvar usuário:", error);
+        alert(`Erro ao salvar usuário: ${error.message}`);
+    }
+
+    resetarFormulario();
+    carregarUsuarios();
 }
 
 const editar = (u) => {
+    // Ao editar, carregue apenas os campos que serão exibidos/editáveis.
+    // NUNCA carregue a senha do backend para o campo de input de senha.
     usuario.value = {
         nome: u.nome,
         email: u.email,
-        senha: '', // não se edita senha diretamente aqui
+        senha: '', // Mantenha a senha VAZIA ao carregar para edição
         role_id: u.role_id
     }
     editandoId.value = u.id
@@ -84,11 +126,22 @@ const editar = (u) => {
 
 const deletar = async (id) => {
     if (confirm('Deseja desativar este usuário?')) {
-    await fetch(`${baseURL}/usuarios/${id}`, {
-        method: 'DELETE',
-        headers
-    })
-    carregarUsuarios()
+        try {
+            const res = await fetch(`${baseURL}/usuarios/${id}`, {
+                method: 'DELETE',
+                headers
+            })
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.detail || `Erro HTTP: ${res.status}`);
+            }
+            alert('Usuário desativado com sucesso!');
+        } catch (error) {
+            console.error("Erro ao desativar usuário:", error);
+            alert(`Erro ao desativar usuário: ${error.message}`);
+        }
+        carregarUsuarios();
     }
 }
 
