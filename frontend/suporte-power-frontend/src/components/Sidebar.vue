@@ -55,12 +55,6 @@
         </li>
 
         <li>
-          <router-link to="/editar-privilegios">
-            <button type="button">✏️ Editar Privilégios</button>
-          </router-link>
-        </li>
-
-        <li>
           <router-link to="/chamados-recorrentes">
             <button type="button">♻️ Chamados Recorrentes</button>
           </router-link>
