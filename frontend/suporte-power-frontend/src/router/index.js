@@ -23,7 +23,6 @@ const routes = [
         { path: 'criar-origem-problema', component: () => import('@/views/CriarOrigemProblemaView.vue') },
         { path: 'cadastrar-maquina', component: () => import('@/views/CadastrarMaquinaView.vue') },
         { path: 'cadastrar-usuario', component: () => import('@/views/CadastrarUsuarioView.vue') },
-        { path: 'editar-privilegios', component: () => import('@/views/EditarPrivilegiosView.vue') },
         { path: 'lista-chamados', component: () => import('@/views/ListaChamadosView.vue') },
         { path: 'cadastrar-prioridade', component: () => import('@/views/CadastrarPrioridadeView.vue') },
         { path: 'chamados-recorrentes', component: () => import('@/views/ChamadosRecorrentesView.vue') }
