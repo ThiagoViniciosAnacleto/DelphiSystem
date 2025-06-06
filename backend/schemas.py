@@ -2,7 +2,29 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 
+# ---------- Role ----------
+class RoleBase(BaseModel):
+    nome: str
+
+class RoleCreate(RoleBase):
+    pass
+
+class RoleUpdate(BaseModel):
+    nome: Optional[str] = None
+
+class RoleOut(RoleBase):
+    id: int
+    class Config:
+        from_attributes = True
+
 # ---------- Usuario ----------
+class UsuarioOut(UsuarioBase):
+    id: int
+    
+    role: Optional[RoleOut] = None
+    class Config:
+        from_attributes = True
+
 class UsuarioBase(BaseModel):
     nome: str
     email: EmailStr
@@ -21,30 +43,6 @@ class UsuarioUpdate(BaseModel):
     ativo: Optional[bool] = None
     class Config:
         orm_mode = True
-
-class UsuarioOut(UsuarioBase):
-    id: int
-    
-    role: Optional[RoleOut] = None
-    class Config:
-        from_attributes = True
-
-
-# ---------- Role ----------
-class RoleBase(BaseModel):
-    nome: str
-
-class RoleCreate(RoleBase):
-    pass
-
-class RoleUpdate(BaseModel):
-    nome: Optional[str] = None
-
-class RoleOut(RoleBase):
-    id: int
-    class Config:
-        from_attributes = True
-
 
 # ---------- Empresa ----------
 class EmpresaBase(BaseModel):
