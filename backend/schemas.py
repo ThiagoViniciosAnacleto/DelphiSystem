@@ -17,13 +17,15 @@ class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[EmailStr] = None
     senha: Optional[str] = None
-    role_id: Optional[int]
+    role_id: Optional[int] = None
     ativo: Optional[bool] = None
     class Config:
         orm_mode = True
 
 class UsuarioOut(UsuarioBase):
     id: int
+    
+    role: Optional[RoleOut] = None
     class Config:
         from_attributes = True
 
