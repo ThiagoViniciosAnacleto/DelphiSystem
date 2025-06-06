@@ -6,10 +6,16 @@
             <input v-model="usuario.nome" placeholder="Nome completo" required />
             <input v-model="usuario.email" type="email" placeholder="E-mail" required />
             
-            <input v-model="usuario.senha" type="password" placeholder="Senha" :required="!editandoId" />
+            <input
+                v-if="!editandoId"
+                v-model="usuario.senha"
+                type="password"
+                placeholder="Senha"
+                required
+            />
             
-            <select v-model="usuario.role_id" required>
-                <option value="" disabled>Selecione o perfil</option>
+            <select v-model="usuario.role_id" :required="!editandoId">
+                <option v-if="!editandoId" value="" disabled>Selecione o perfil</option>
                 <option v-for="r in roles" :value="r.id" :key="r.id">{{ r.nome }}</option>
             </select>
 
@@ -41,7 +47,6 @@ import { ref, onMounted } from 'vue'
 
 const usuarios = ref([])
 const roles = ref([])
-// Inicialize a senha como vazia para evitar que seja enviada por padrão em edições
 const usuario = ref({ nome: '', email: '', senha: '', role_id: '' })
 const editandoId = ref(null)
 
@@ -78,17 +83,17 @@ const salvarUsuario = async () => {
         : `${baseURL}/usuarios/`
 
     const method = editandoId.value ? 'PUT' : 'POST'
-
-    // --- CHAVE DA REFACTOR AQUI ---
     // Cria um payload específico para a requisição
     const payload = {
         nome: usuario.value.nome,
         email: usuario.value.email,
         role_id: usuario.value.role_id,
-        // Adiciona a senha APENAS se for uma criação OU se o campo de senha foi preenchido
-        // na edição (assumindo que o usuário quer mudar a senha)
-        ...(usuario.value.senha && { senha: usuario.value.senha }) // Condicionalmente adiciona a senha
     };
+    
+    if (!editandoId.value) { // Se estiver criando um novo usuário (POST)
+        // A senha é obrigatória no campo do template para criação
+        payload.senha = usuario.value.senha;
+    }
 
     try {
         const res = await fetch(url, {
@@ -113,12 +118,9 @@ const salvarUsuario = async () => {
 }
 
 const editar = (u) => {
-    // Ao editar, carregue apenas os campos que serão exibidos/editáveis.
-    // NUNCA carregue a senha do backend para o campo de input de senha.
     usuario.value = {
         nome: u.nome,
         email: u.email,
-        senha: '', // Mantenha a senha VAZIA ao carregar para edição
         role_id: u.role_id
     }
     editandoId.value = u.id
