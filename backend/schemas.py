@@ -18,12 +18,6 @@ class RoleOut(RoleBase):
         from_attributes = True
 
 # ---------- Usuario ----------
-class UsuarioOut(UsuarioBase):
-    id: int
-    
-    role: Optional[RoleOut] = None
-    class Config:
-        from_attributes = True
 
 class UsuarioBase(BaseModel):
     nome: str
@@ -43,6 +37,13 @@ class UsuarioUpdate(BaseModel):
     ativo: Optional[bool] = None
     class Config:
         orm_mode = True
+
+class UsuarioOut(UsuarioBase):
+    id: int
+    
+    role: Optional[RoleOut] = None
+    class Config:
+        from_attributes = True
 
 # ---------- Empresa ----------
 class EmpresaBase(BaseModel):
