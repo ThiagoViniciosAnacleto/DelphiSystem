@@ -72,31 +72,61 @@ const prioridades = ref([])
 const origens = ref([])
 const usuarios = ref([])
 
-onMounted(async () => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` }
+const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
+const authHeaders = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+}
 
-    empresas.value = await fetch('/api/empresas', { headers }).then(r => r.json())
-    maquinas.value = await fetch('/api/maquinas', { headers }).then(r => r.json())
-    prioridades.value = await fetch('/api/prioridades', { headers }).then(r => r.json())
-    origens.value = await fetch('/api/origens', { headers }).then(r => r.json())
-    usuarios.value = await fetch('/api/usuarios', { headers }).then(r => r.json())
+onMounted(async () => {
+    try {
+        const fetchData = async (endpoint) => {
+            const res = await fetch(`${baseURL}${endpoint}`, { headers: authHeaders })
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.detail || `Erro HTTP ${res.status} ao carregar ${endpoint}`);
+            }
+            return res.json()
+        }
+
+        empresas.value = await fetchData('/empresas/')
+        maquinas.value = await fetchData('/maquinas/')
+        prioridades.value = await fetchData('/prioridades/')
+        origens.value = await fetchData('/origens_problema/')
+        usuarios.value = await fetchData('/usuarios/')
+
+    } catch (error) {
+        console.error("Erro ao carregar dados para o formulário de chamado:", error);
+        alert(`Erro ao carregar dados: ${error.message}`);
+    }
 })
 
 const enviarFormulario = async () => {
-    const resp = await fetch('/api/chamados', {
+    const resp = await fetch(`${baseURL}/chamados`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-    body: JSON.stringify(form.value)
-})
+        headers: authHeaders,
+        body: JSON.stringify(form.value)
+    })
 
     if (resp.ok) {
         alert('Chamado criado com sucesso!')
+
+        form.value = {
+            cliente: '',
+            relato: '',
+            porta_ssh: '',
+            descricao_acao: '',
+            prioridade_id: null,
+            status_id: null,
+            empresa_id: null,
+            tipo_maquina_id: null,
+            origem_id: null,
+            responsavel_atendimento_id: null,
+            responsavel_acao_id: null
+        }
     } else {
-    const erro = await resp.json()
-    alert('Erro ao criar chamado: ' + erro.detail)
+        const erro = await resp.json()
+        alert('Erro ao criar chamado: ' + erro.detail)
     }
 }
 </script>
