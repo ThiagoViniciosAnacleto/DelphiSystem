@@ -254,7 +254,7 @@ def deletar_frequencia(frequencia_id: int, db: Session = Depends(get_db), usuari
 def listar_chamados(
     status_id: Optional[int] = None,
     empresa_id: Optional[int] = None,
-    cliente: Optional[str] = None,
+    contato: Optional[str] = None,
     responsavel_id: Optional[int] = None,
     order_by: str = "datetime_abertura",
     desc: bool = False,
@@ -265,7 +265,7 @@ def listar_chamados(
         db,
         status_id=status_id,
         empresa_id=empresa_id,
-        cliente=cliente,
+        contato=contato,
         responsavel_id=responsavel_id,
         order_by=order_by,
         desc=desc
