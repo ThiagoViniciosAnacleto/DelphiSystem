@@ -65,7 +65,7 @@ const form = ref({
     tipo_maquina_id: null,
     porta_ssh: '',
     origem_id: null,
-    responsavel_acao_id: null
+    responsavel_acao_id: null,
     acao_realizada: null,
     status_id: null,
 })
