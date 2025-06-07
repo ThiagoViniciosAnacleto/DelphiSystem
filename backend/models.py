@@ -1,5 +1,4 @@
-from sqlalchemy.sql import func    
-
+from sqlalchemy.sql import func
 from sqlalchemy import (
     Column,
     Integer,
@@ -135,37 +134,27 @@ class Chamado(Base, SoftDeleteMixin):
     __tablename__ = "chamados"
 
     id = Column(Integer, primary_key=True, index=True)
-
     responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
-    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="SET NULL"), nullable=True, index=True)
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="SET NULL"), nullable=False, index=True)
     tipo_maquina_id = Column(Integer, ForeignKey("maquinas.id"), nullable=True, index=True)
     origem_id = Column(Integer, ForeignKey("origens_problema.id"), nullable=True, index=True)
-
-    datetime_abertura = Column(DateTime(timezone=True), nullable=True, default=datetime.utcnow, index=True)
-
-    cliente = Column(String(150), nullable=False, index=True)
+    datetime_abertura = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, index=True)
+    contato = Column(String(150), nullable=False, index=True)
     porta_ssh = Column(String(100), nullable=True)
-
     relato = Column(Text, nullable=False)
-
     prioridade_id = Column(Integer, ForeignKey("prioridades.id"), nullable=True, index=True)
     status_id = Column(Integer, ForeignKey("status.id"), nullable=True, index=True)
-
-    descricao_acao = Column(Text, nullable=True)
-
+    acao_realizada = Column(Text, nullable=True)
     prioridade = relationship("Prioridade", back_populates="chamados", lazy="joined")
     status = relationship("Status", back_populates="chamados", lazy="joined")
-
     responsavel_atendimento = relationship("Usuario",
     foreign_keys=[responsavel_atendimento_id],
     back_populates="chamados_atendimento", lazy="joined")
-    
     responsavel_acao = relationship("Usuario", foreign_keys=[responsavel_acao_id], back_populates="chamados_acao", lazy="joined")
     empresa = relationship("Empresa", back_populates="chamados", lazy="joined")
     tipo_maquina = relationship("Maquina", back_populates="chamados", lazy="joined")
     origem = relationship("OrigemProblema", back_populates="chamados", lazy="joined")
-
     logs = relationship("LogAcao", back_populates="chamado", lazy="joined")
 
 
@@ -187,7 +176,7 @@ class ChamadoRecorrente(Base, SoftDeleteMixin):
     origem_id = Column(Integer, ForeignKey("origens_problema.id"), nullable=True)
     responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
     responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
-    descricao_acao = Column(Text, nullable=True)
+    acao_realizada = Column(Text, nullable=True)
 
     frequencia_id = Column(Integer, ForeignKey("frequencias.id"), nullable=False)
     frequencia = relationship("Frequencia", back_populates="chamados_recorrentes")
