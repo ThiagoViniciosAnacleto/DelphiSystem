@@ -1,6 +1,6 @@
 <template>
     <div class="empresas">
-        <h2>Empresas</h2>
+        <h2>Cadastrar Empresas</h2>
 
         <form @submit.prevent="salvarEmpresa">
             <input

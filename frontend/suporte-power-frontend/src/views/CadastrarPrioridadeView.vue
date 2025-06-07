@@ -1,6 +1,6 @@
 <template>
   <div class="prioridades">
-    <h2>Prioridades</h2>
+    <h2>Cadastrar Níveis de Prioridade</h2>
 
     <form @submit.prevent="salvarPrioridade">
       <input v-model="novaPrioridade.nome" placeholder="Nome da prioridade" required />
