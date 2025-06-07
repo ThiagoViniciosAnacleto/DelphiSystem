@@ -190,29 +190,29 @@ def deletar_prioridade(prioridade_id: int, db: Session = Depends(get_db), usuari
     return {"detail": "Prioridade removida"}
 
 # ---------------------- STATUS ----------------------
-@app.get("/status/", response_model=List[StatusOut])
+@app.get("/status_chamado/", response_model=List[StatusOut])
 def listar_status(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
     return cruds.listar_status(db)
 
-@app.get("/status/{status_id}", response_model=StatusOut)
+@app.get("/status_chamado/{status_id}", response_model=StatusOut)
 def buscar_status(status_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
     status = cruds.buscar_status_por_id(db, status_id)
     if not status:
         raise HTTPException(status_code=404, detail="Status não encontrado")
     return status
 
-@app.post("/status/", response_model=StatusOut)
+@app.post("/status_chamado/", response_model=StatusOut)
 def criar_status(status: StatusCreate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
     return cruds.criar_status(db, status)
 
-@app.put("/status/{status_id}", response_model=StatusOut)
+@app.put("/status_chamado/{status_id}", response_model=StatusOut)
 def atualizar_status(status_id: int, dados: StatusUpdate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
     status = cruds.atualizar_status(db, status_id, dados)
     if not status:
         raise HTTPException(status_code=404, detail="Status não encontrado")
     return status
 
-@app.delete("/status/{status_id}")
+@app.delete("/status_chamado/{status_id}")
 def deletar_status(status_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
     sucesso = cruds.deletar_status(db, status_id)
     if not sucesso:
