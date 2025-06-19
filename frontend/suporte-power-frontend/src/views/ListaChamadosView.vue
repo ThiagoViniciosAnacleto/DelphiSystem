@@ -50,7 +50,6 @@
                         <td>{{ formatarData(chamado.datetime_abertura) }}</td>
                         <td>{{ chamado.contato }}</td>
                         <td>{{ chamado.empresa ? chamado.empresa.nome : 'N/A' }}</td>
-                        <td>{{ truncateText(chamado.relato, 50) }}</td>
                         <td>{{ chamado.status ? chamado.status.nome : 'N/A' }}</td>
                         <td>{{ chamado.prioridade ? chamado.prioridade.nome : 'N/A' }}</td>
                         <td>{{ chamado.responsavel_atendimento ? chamado.responsavel_atendimento.nome : 'N/A' }}</td>
