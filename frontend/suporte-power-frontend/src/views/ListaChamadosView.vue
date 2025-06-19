@@ -37,7 +37,6 @@
                         <th>Data Abertura</th>
                         <th>Contato</th>
                         <th>Empresa</th>
-                        <th>Relato</th>
                         <th>Status</th>
                         <th>Prioridade</th>
                         <th>Responsável</th>
