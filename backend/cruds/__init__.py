@@ -88,6 +88,8 @@ from .tag import (
     buscar_tag_por_id, 
     buscar_tag_por_nome, 
     deletar_tag,
+    adicionar_tag_a_chamado,
+    remover_tag_de_chamado,
 )
 
 from .interacao import (
@@ -178,6 +180,8 @@ __all__ = [
     "buscar_tag_por_id", 
     "buscar_tag_por_nome", 
     "deletar_tag",
+    "adicionar_tag_a_chamado",
+    "remover_tag_de_chamado",
     # Interação
     "criar_interacao",
     "listar_interacoes_por_chamado",
