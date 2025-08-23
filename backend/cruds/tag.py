@@ -31,3 +31,29 @@ def deletar_tag(db: Session, tag_id: int) -> bool:
         db.commit()
         return True
     return False
+
+def adicionar_tag_a_chamado(db: Session, chamado_id: int, tag_id: int) -> models.Chamado | None:
+    """Adiciona uma associação de tag a um chamado."""
+    chamado = db.query(models.Chamado).filter(models.Chamado.id == chamado_id).first()
+    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+    if chamado and tag:
+        if tag not in chamado.tags:
+            chamado.tags.append(tag)
+            db.commit()
+            db.refresh(chamado)
+        return chamado
+    return None
+
+def remover_tag_de_chamado(db: Session, chamado_id: int, tag_id: int) -> models.Chamado | None:
+    """Remove uma associação de tag de um chamado."""
+    chamado = db.query(models.Chamado).filter(models.Chamado.id == chamado_id).first()
+    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+    if chamado and tag:
+        if tag in chamado.tags:
+            chamado.tags.remove(tag)
+            db.commit()
+            db.refresh(chamado)
+        return chamado
+    return None
