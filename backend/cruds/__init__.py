@@ -82,6 +82,29 @@ from .usuario import (
     get_usuario_por_email,
 )
 
+from .tag import (
+    criar_tag, 
+    listar_tags, 
+    buscar_tag_por_id, 
+    buscar_tag_por_nome, 
+    deletar_tag,
+)
+
+from .interacao import (
+    criar_interacao,
+    listar_interacoes_por_chamado,
+    buscar_interacao_por_id,
+    atualizar_interacao,
+    deletar_interacao,
+)
+
+from .anexo import (
+    criar_anexo,
+    listar_anexos_por_chamado,
+    buscar_anexo_por_id,
+    deletar_anexo,
+)
+
 __all__ = [
     # Chamado
     "criar_chamado",
@@ -149,4 +172,21 @@ __all__ = [
     "atualizar_usuario",
     "deletar_usuario",
     "get_usuario_por_email",
+    # Tag
+    "criar_tag", 
+    "listar_tags", 
+    "buscar_tag_por_id", 
+    "buscar_tag_por_nome", 
+    "deletar_tag",
+    # Interação
+    "criar_interacao",
+    "listar_interacoes_por_chamado",
+    "buscar_interacao_por_id",
+    "atualizar_interacao",
+    "deletar_interacao",
+    # Anexo
+    "criar_anexo",
+    "listar_anexos_por_chamado",
+    "buscar_anexo_por_id",
+    "deletar_anexo",
 ]
