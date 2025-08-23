@@ -1,6 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi import Body
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import shutil
+import os
 from typing import List, Optional
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
@@ -12,6 +15,10 @@ from backend.utils import hash_senha
 from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
+
+UPLOAD_DIRECTORY = "uploads"
+os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
+
 
 app = FastAPI()
 
@@ -404,6 +411,83 @@ def deletar_interacao_endpoint(
         
     cruds.deletar_interacao(db, interacao_id=interacao_id)
     return {"detail": "Interação removida com sucesso"}
+
+# ---------------------- ANEXOS ----------------------
+
+@app.post("/chamados/{chamado_id}/anexos/", response_model=AnexoOut, status_code=201)
+def upload_anexo_endpoint(
+    chamado_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    usuario: UsuarioOut = Depends(get_current_user)
+):
+    """Faz o upload de um arquivo e o associa a um chamado."""
+    
+    # Lógica para salvar o arquivo no servidor
+    file_path = os.path.join(UPLOAD_DIRECTORY, f"{chamado_id}_{usuario.id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # Informações para salvar no banco
+    anexo_info = {
+        "nome_arquivo_original": file.filename,
+        "path_arquivo_armazenado": file_path,
+        "content_type": file.content_type,
+        "tamanho_bytes": file.size
+    }
+
+    # Salva os metadados no banco de dados
+    db_anexo = cruds.criar_anexo(db, anexo_info=anexo_info, chamado_id=chamado_id, usuario_id=usuario.id)
+    
+    # Adiciona a URL de acesso no retorno
+    # ATENÇÃO: A URL pode precisar ser ajustada dependendo do seu domínio final
+    db_anexo.url = f"/anexos/{db_anexo.id}"
+    
+    return db_anexo
+
+
+@app.get("/chamados/{chamado_id}/anexos/", response_model=List[AnexoOut])
+def listar_anexos_endpoint(chamado_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    """Lista todos os anexos de um chamado."""
+    anexos = cruds.listar_anexos_por_chamado(db, chamado_id=chamado_id)
+    for anexo in anexos:
+        anexo.url = f"/anexos/{anexo.id}"
+    return anexos
+
+
+@app.get("/anexos/{anexo_id}")
+def baixar_anexo_endpoint(anexo_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    """Permite o download de um arquivo anexado."""
+    db_anexo = cruds.buscar_anexo_por_id(db, anexo_id)
+    if not db_anexo:
+        raise HTTPException(status_code=404, detail="Anexo não encontrado")
+
+    # Verifica se o arquivo existe no disco
+    if not os.path.exists(db_anexo.path_arquivo_armazenado):
+        raise HTTPException(status_code=404, detail="Arquivo físico não encontrado no servidor")
+
+    return FileResponse(path=db_anexo.path_arquivo_armazenado, filename=db_anexo.nome_arquivo_original)
+
+
+@app.delete("/anexos/{anexo_id}", status_code=204)
+def deletar_anexo_endpoint(anexo_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    """Deleta um anexo (registro no banco e arquivo físico)."""
+    db_anexo = cruds.buscar_anexo_por_id(db, anexo_id)
+    if not db_anexo:
+        raise HTTPException(status_code=404, detail="Anexo não encontrado")
+
+    # Regra: Apenas quem enviou ou um admin pode deletar
+    if db_anexo.usuario_id != usuario.id and usuario.role.nome != "admin":
+        raise HTTPException(status_code=403, detail="Você não tem permissão para deletar este anexo")
+
+    # Deleta o arquivo físico do servidor
+    if os.path.exists(db_anexo.path_arquivo_armazenado):
+        os.remove(db_anexo.path_arquivo_armazenado)
+        
+    # Deleta o registro do banco
+    cruds.deletar_anexo(db, anexo_id=anexo_id)
+    
+    return {"detail": "Anexo removido com sucesso"}
 
 # ---------------------- CHAMADOS RECORRENTES ----------------------
 @app.get("/chamados_recorrentes/", response_model=List[ChamadoRecorrenteOut])
