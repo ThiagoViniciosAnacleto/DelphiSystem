@@ -301,6 +301,110 @@ def deletar_chamado(chamado_id: int, db: Session = Depends(get_db), usuario: Usu
         raise HTTPException(status_code=404, detail="Chamado não encontrado")
     return {"detail": "Chamado removido"}
 
+
+@app.get("/tags/", response_model=List[TagOut])
+def listar_tags_endpoint(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    """Lista todas as tags cadastradas."""
+    return cruds.listar_tags(db)
+
+@app.get("/tags/{tag_id}", response_model=TagOut)
+def buscar_tag_endpoint(tag_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    """Busca uma tag específica pelo ID."""
+    db_tag = cruds.buscar_tag_por_id(db, tag_id)
+    if not db_tag:
+        raise HTTPException(status_code=404, detail="Tag não encontrada")
+    return db_tag
+
+@app.post("/tags/", response_model=TagOut, status_code=201)
+def criar_tag_endpoint(tag: TagCreate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(tecnico_ou_admin)):
+    """Cria uma nova tag. Apenas para técnicos e administradores."""
+    # Opcional: Verificar se a tag já existe para evitar duplicatas
+    db_tag = cruds.buscar_tag_por_nome(db, tag.nome)
+    if db_tag:
+        raise HTTPException(status_code=400, detail="Uma tag com este nome já existe.")
+    return cruds.criar_tag(db, tag)
+
+@app.delete("/tags/{tag_id}", status_code=204)
+def deletar_tag_endpoint(tag_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(admin_only)):
+    """Deleta uma tag. Apenas para administradores."""
+    sucesso = cruds.deletar_tag(db, tag_id)
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Tag não encontrada")
+    return {"detail": "Tag removida com sucesso"}
+
+# --- Novas rotas para associar tags a um chamado ---
+
+@app.post("/chamados/{chamado_id}/tags/{tag_id}", response_model=ChamadoOut)
+def associar_tag_a_chamado(chamado_id: int, tag_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(tecnico_ou_admin)):
+    """Associa uma tag existente a um chamado."""
+    chamado = cruds.adicionar_tag_a_chamado(db, chamado_id=chamado_id, tag_id=tag_id)
+    if not chamado:
+        raise HTTPException(status_code=404, detail="Chamado ou Tag não encontrado(a)")
+    return chamado
+
+@app.delete("/chamados/{chamado_id}/tags/{tag_id}", response_model=ChamadoOut)
+def remover_tag_de_chamado(chamado_id: int, tag_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(tecnico_ou_admin)):
+    """Remove a associação de uma tag de um chamado."""
+    chamado = cruds.remover_tag_de_chamado(db, chamado_id=chamado_id, tag_id=tag_id)
+    if not chamado:
+        raise HTTPException(status_code=404, detail="Chamado ou Tag não encontrado(a) ou a associação não existe")
+    return chamado
+
+# ---------------------- INTERACOES (COMENTÁRIOS) ----------------------
+
+@app.get("/chamados/{chamado_id}/interacoes/", response_model=List[InteracaoOut])
+def listar_interacoes_endpoint(chamado_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
+    """Lista todas as interações (comentários) de um chamado específico."""
+    # Opcional: Adicionar uma verificação se o chamado existe
+    return cruds.listar_interacoes_por_chamado(db, chamado_id=chamado_id)
+
+@app.post("/chamados/{chamado_id}/interacoes/", response_model=InteracaoOut, status_code=201)
+def criar_interacao_endpoint(
+    chamado_id: int,
+    interacao: InteracaoCreate,
+    db: Session = Depends(get_db),
+    usuario: UsuarioOut = Depends(get_current_user) # Qualquer usuário logado pode comentar
+):
+    """Adiciona um novo comentário a um chamado."""
+    # Passamos o ID do usuário logado para a função CRUD
+    return cruds.criar_interacao(db, interacao=interacao, chamado_id=chamado_id, usuario_id=usuario.id)
+
+@app.put("/interacoes/{interacao_id}", response_model=InteracaoOut)
+def atualizar_interacao_endpoint(
+    interacao_id: int,
+    dados: InteracaoUpdate,
+    db: Session = Depends(get_db),
+    usuario: UsuarioOut = Depends(get_current_user)
+):
+    """Atualiza um comentário existente."""
+    db_interacao = cruds.buscar_interacao_por_id(db, interacao_id)
+    if not db_interacao:
+        raise HTTPException(status_code=404, detail="Interação não encontrada")
+    
+    # Regra de negócio: Apenas o autor do comentário ou um admin pode editar
+    if db_interacao.usuario_id != usuario.id and usuario.role.nome != "admin":
+        raise HTTPException(status_code=403, detail="Você não tem permissão para editar este comentário")
+
+    return cruds.atualizar_interacao(db, interacao_id=interacao_id, dados=dados)
+
+@app.delete("/interacoes/{interacao_id}", status_code=204)
+def deletar_interacao_endpoint(
+    interacao_id: int,
+    db: Session = Depends(get_db),
+    usuario: UsuarioOut = Depends(get_current_user)
+):
+    """Deleta um comentário."""
+    db_interacao = cruds.buscar_interacao_por_id(db, interacao_id)
+    if not db_interacao:
+        raise HTTPException(status_code=404, detail="Interação não encontrada")
+
+    # Regra de negócio: Apenas o autor do comentário ou um admin pode deletar
+    if db_interacao.usuario_id != usuario.id and usuario.role.nome != "admin":
+        raise HTTPException(status_code=403, detail="Você não tem permissão para deletar este comentário")
+        
+    cruds.deletar_interacao(db, interacao_id=interacao_id)
+    return {"detail": "Interação removida com sucesso"}
+
 # ---------------------- CHAMADOS RECORRENTES ----------------------
 @app.get("/chamados_recorrentes/", response_model=List[ChamadoRecorrenteOut])
 def listar_chamados_recorrentes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
