@@ -1,5 +1,6 @@
 from sqlalchemy.sql import func
 from sqlalchemy import (
+    Table,
     Column,
     Integer,
     String,
@@ -13,6 +14,11 @@ from datetime import datetime
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
+
+chamados_tags = Table('chamados_tags', Base.metadata,
+    Column('chamado_id', Integer, ForeignKey('chamados.id'), primary_key=True),
+    Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True)
+)
 
 class SoftDeleteMixin:
     ativo = Column(Boolean, nullable=False, default=True, index=True)
@@ -156,7 +162,9 @@ class Chamado(Base, SoftDeleteMixin):
     tipo_maquina = relationship("Maquina", back_populates="chamados", lazy="joined")
     origem = relationship("OrigemProblema", back_populates="chamados", lazy="joined")
     logs = relationship("LogAcao", back_populates="chamado", lazy="joined")
-
+    anexos = relationship("Anexo", back_populates="chamado")
+    interacoes = relationship("Interacao", back_populates="chamado")
+    tags = relationship("Tag",secondary=chamados_tags, back_populates="chamados")
 
 class ChamadoRecorrente(Base, SoftDeleteMixin):
     """Tabela de chamados recorrentes, gerenciando frequências e próximas execuções."""
@@ -206,3 +214,49 @@ class LogAcao(Base, SoftDeleteMixin):
 
     usuario = relationship("Usuario", back_populates="log_acoes")
     chamado = relationship("Chamado", back_populates="logs")
+
+
+class Anexo(Base, SoftDeleteMixin):
+    """Tabela para armazenar metadados de arquivos anexados aos chamados."""
+    __tablename__ = "anexos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chamado_id = Column(Integer, ForeignKey("chamados.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True) # Quem fez o upload
+
+    nome_arquivo_original = Column(String(255), nullable=False)
+    path_arquivo_armazenado = Column(String(255), nullable=False, unique=True)
+    content_type = Column(String(100), nullable=False)
+    tamanho_bytes = Column(Integer, nullable=False)
+    data_upload = Column(TIMESTAMP, nullable=False, server_default=func.now())
+
+    chamado = relationship("Chamado", back_populates="anexos")
+    usuario = relationship("Usuario")
+
+class Interacao(Base, SoftDeleteMixin):
+    """Tabela para armazenar a timeline de comentários e interações em um chamado."""
+    __tablename__ = "interacoes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chamado_id = Column(Integer, ForeignKey("chamados.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True) # Quem comentou
+
+    comentario = Column(Text, nullable=False)
+    privado = Column(Boolean, default=False, nullable=False) # True para notas internas
+    data_interacao = Column(TIMESTAMP, nullable=False, server_default=func.now())
+
+    chamado = relationship("Chamado", back_populates="interacoes")
+    usuario = relationship("Usuario")
+
+class Tag(Base):
+    """Tabela de tags para categorização flexível de chamados."""
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True)
+    nome = Column(String(50), unique=True, nullable=False)
+
+    chamados = relationship(
+        "Chamado",
+        secondary=chamados_tags,
+        back_populates="tags"
+    )
