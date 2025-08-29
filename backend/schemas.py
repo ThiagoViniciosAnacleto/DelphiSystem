@@ -142,6 +142,63 @@ class FrequenciaOut(FrequenciaBase):
     class Config:
         from_attributes = True
 
+# ---------- Anexo ----------
+class AnexoBase(BaseModel):
+    nome_arquivo_original: str
+    content_type: str
+    tamanho_bytes: int
+
+class AnexoCreate(AnexoBase):
+    pass
+
+class AnexoOut(AnexoBase):
+    id: int
+    url: str # Adicionamos uma URL para que o frontend saiba como acessar o arquivo
+    chamado_id: int
+    usuario_id: int
+    data_upload: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ---------- Interacao ----------
+class InteracaoBase(BaseModel):
+    comentario: str
+    privado: bool = False
+
+class InteracaoCreate(InteracaoBase):
+    pass
+
+class InteracaoUpdate(BaseModel):
+    comentario: Optional[str] = None
+    privado: Optional[bool] = None
+
+class InteracaoOut(InteracaoBase):
+    id: int
+    chamado_id: int
+    usuario: Optional[UsuarioOut] = None # Para mostrar quem comentou
+
+    class Config:
+        from_attributes = True
+
+
+# ---------- Tag ----------
+class TagBase(BaseModel):
+    nome: str
+
+class TagCreate(TagBase):
+    pass
+
+class TagUpdate(BaseModel):
+    nome: Optional[str] = None
+
+class TagOut(TagBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
 
 # ---------- Chamado ----------
 class ChamadoBase(BaseModel):
@@ -249,62 +306,5 @@ class LogAcaoCreate(LogAcaoBase):
 class LogAcaoOut(LogAcaoBase):
     id: int
     data_hora: datetime
-    class Config:
-        from_attributes = True
-
-# ---------- Anexo ----------
-class AnexoBase(BaseModel):
-    nome_arquivo_original: str
-    content_type: str
-    tamanho_bytes: int
-
-class AnexoCreate(AnexoBase):
-    pass
-
-class AnexoOut(AnexoBase):
-    id: int
-    url: str # Adicionamos uma URL para que o frontend saiba como acessar o arquivo
-    chamado_id: int
-    usuario_id: int
-    data_upload: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# ---------- Interacao ----------
-class InteracaoBase(BaseModel):
-    comentario: str
-    privado: bool = False
-
-class InteracaoCreate(InteracaoBase):
-    pass
-
-class InteracaoUpdate(BaseModel):
-    comentario: Optional[str] = None
-    privado: Optional[bool] = None
-
-class InteracaoOut(InteracaoBase):
-    id: int
-    chamado_id: int
-    usuario: Optional[UsuarioOut] = None # Para mostrar quem comentou
-
-    class Config:
-        from_attributes = True
-
-
-# ---------- Tag ----------
-class TagBase(BaseModel):
-    nome: str
-
-class TagCreate(TagBase):
-    pass
-
-class TagUpdate(BaseModel):
-    nome: Optional[str] = None
-
-class TagOut(TagBase):
-    id: int
-
     class Config:
         from_attributes = True
