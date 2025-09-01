@@ -4,15 +4,15 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import shutil
 import os
-FRONTEND_URL = os.getenv("FRONTEND_URL")
 from typing import List, Optional
-from .models import LogAcao, Usuario
-from .database import SessionLocal, engine, Base
-from .auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
-from . import models
-from . import cruds
-from .schemas import *
-from .utils import hash_senha
+
+from backend.models import LogAcao, Usuario
+from backend.database import SessionLocal, engine, Base
+from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
+from backend import models
+from backend import cruds
+from backend.schemas import *
+from backend.utils import hash_senha
 from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -20,6 +20,7 @@ Base.metadata.create_all(bind=engine)
 UPLOAD_DIRECTORY = "uploads"
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 app = FastAPI()
 
@@ -45,7 +46,7 @@ tecnico_ou_admin = RoleChecker(["admin", "tecnico"])
 
 # ---------------------- LOGIN ----------------------
 from fastapi.security import OAuth2PasswordRequestForm
-from .auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 
 @app.post("/login")
