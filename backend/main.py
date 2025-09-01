@@ -7,7 +7,7 @@ import shutil
 import os
 from typing import List, Optional
 
-from .models import LogAcao, Usuario
+from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
 from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
 from backend import models
