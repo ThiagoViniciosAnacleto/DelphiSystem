@@ -1,4 +1,3 @@
-# Forçando atualização para deploy v3
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi import Body
 from fastapi.responses import FileResponse
@@ -7,13 +6,12 @@ import shutil
 import os
 from typing import List, Optional
 
-from backend.models import LogAcao, Usuario
-from backend.database import SessionLocal, engine, Base
-from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
-from backend import models
-from backend import cruds
-from backend.schemas import *
-from backend.utils import hash_senha
+from .models import LogAcao, Usuario
+from .database import SessionLocal, engine, Base
+from .auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
+from . import models, cruds
+from .schemas import * 
+from .utils import hash_senha 
 from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -47,7 +45,7 @@ tecnico_ou_admin = RoleChecker(["admin", "tecnico"])
 
 # ---------------------- LOGIN ----------------------
 from fastapi.security import OAuth2PasswordRequestForm
-from backend.auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
+from .auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 
 @app.post("/login")
