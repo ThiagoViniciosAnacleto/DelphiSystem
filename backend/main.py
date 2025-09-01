@@ -6,12 +6,13 @@ import shutil
 import os
 from typing import List, Optional
 
-from .models import LogAcao, Usuario
-from .database import SessionLocal, engine, Base
-from .auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
-from . import models, cruds
-from .schemas import * 
-from .utils import hash_senha 
+from backend.models import LogAcao, Usuario
+from backend.database import SessionLocal, engine, Base
+from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
+import backend.models as models
+import backend.cruds as cruds
+from backend.schemas import * 
+from backend.utils import hash_senha 
 from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -45,7 +46,7 @@ tecnico_ou_admin = RoleChecker(["admin", "tecnico"])
 
 # ---------------------- LOGIN ----------------------
 from fastapi.security import OAuth2PasswordRequestForm
-from .auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.auth import autenticar_usuario, criar_token_acesso, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 
 @app.post("/login")
