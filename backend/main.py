@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import shutil
 import os
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 from typing import List, Optional
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
@@ -22,9 +23,10 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
 app = FastAPI()
 
+# MUDANÇA TEMPORÁRIA
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://suporte-power-dev.netlify.app"],
+    allow_origins=[FRONTEND_URL]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -668,7 +670,7 @@ def recuperar_senha(email: str = Body(..., embed=True), db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="E-mail não encontrado")
 
     token = criar_token_acesso(data={"sub": usuario.email}, expires_delta=timedelta(minutes=30))
-    link = f"https://suporte-power-dev.netlify.app/resetar-senha?token={token}"
+    link = f"{FRONTEND_URL}/resetar-senha?token={token}"
 
     enviar_email_recuperacao(usuario.email, link)
     return {"mensagem": "E-mail enviado com instruções para redefinir a senha"}

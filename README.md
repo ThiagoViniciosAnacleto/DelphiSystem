@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # DelphiSystem
 
 #https://delphisystem.onrender.com
@@ -15,3 +16,10 @@ Este projeto é dividido em três componentes principais, cada um hospedado em u
     -   **URL da API:**
 -   **Banco de Dados:** Hospedado na **Neon Tech**
 >>>>>>> 6c1fccf (Update README.md)
+=======
+# DelphiSystem
+
+## 🚀 Arquitetura e Ambientes
+
+-   **APLICAÇÃO:** Hospedado no **Render**
+>>>>>>> cd58d5c (refactor(config): Externaliza URLs e modulariza dependências)
