@@ -1,3 +1,4 @@
+# Forçando atualização para deploy v3
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi import Body
 from fastapi.responses import FileResponse
