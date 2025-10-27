@@ -1,4 +1,16 @@
 import os
+
+from pathlib import Path
+from dotenv import load_dotenv
+
+ROOT_DIR = Path(__file__).resolve().parent.parent 
+
+# 2. Aponta para o arquivo .env que está lá na raiz
+env_path = ROOT_DIR / ".env"
+
+# 3. Carrega as variáveis de ambiente ANTES de todo o resto
+load_dotenv(dotenv_path=env_path)
+
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal, engine, Base
 from backend.cruds import usuario as cruds_usuario
@@ -96,7 +108,7 @@ def popular_banco():
             return # Retorna da função se o usuário já foi criado
 
         # --- Cláusula de Guarda 3: Verifica se o cargo 'admin' existe ---
-        admin_role = cruds_role.buscar_role_por_nome(db, nome="admin")
+        admin_role = db.query(Role).filter(Role.nome == "admin").first()
         if not admin_role:
             print("ERRO: Cargo 'admin' não encontrado no banco. Não é possível criar o usuário admin.")
             return # Retorna se o cargo essencial não foi encontrado
