@@ -7,7 +7,7 @@ from backend.schemas import UsuarioCreate, RoleCreate
 from backend.models import Status, Prioridade, Frequencia, OrigemProblema, Role
 
 # Garante que as tabelas sejam criadas se não existirem
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 def popular_banco():
     db: Session = SessionLocal()
