@@ -11,8 +11,7 @@ from dotenv import load_dotenv
 
 # ---------- Configuração do .env ----------
 ROOT_DIR = Path(__file__).resolve().parent.parent
-
-env_path = ROOT_DIR / ".env.dev"
+env_path = ROOT_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 # ---------- Define URL do banco ----------
@@ -20,7 +19,7 @@ database_url = os.getenv("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 else:
-    raise Exception("DATABASE_URL não encontrado no arquivo .env.dev na raiz do projeto")
+    raise Exception("DATABASE_URL não encontrado no arquivo .env na raiz do projeto")
 
 # ---------- Logging padrão do Alembic ----------
 if config.config_file_name is not None:
