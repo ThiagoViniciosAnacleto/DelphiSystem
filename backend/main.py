@@ -1,21 +1,32 @@
+import os
+from typing import List, Optional
+from pathlib import Path
+from dotenv import load_dotenv 
+
+# 1. Define o caminho para a PASTA RAIZ
+ROOT_DIR = Path(__file__).resolve().parent.parent 
+
+# 2. Aponta para o arquivo .env que está lá na raiz
+env_path = ROOT_DIR / ".env"
+
+# 3. Carrega as variáveis de ambiente ANTES de todo o resto
+load_dotenv(dotenv_path=env_path) 
+
+
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi import Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import shutil
-import os
-from typing import List, Optional
-
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
 from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
 import backend.models as models
 import backend.cruds as cruds
-from backend.schemas import * 
+from backend.schemas import *
 from backend.utils import hash_senha 
 from starlette.middleware.cors import CORSMiddleware
 
-Base.metadata.create_all(bind=engine)
 
 UPLOAD_DIRECTORY = "uploads"
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
