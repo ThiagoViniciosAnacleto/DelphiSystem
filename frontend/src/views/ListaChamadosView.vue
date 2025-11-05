@@ -53,7 +53,7 @@
                         <td>{{ chamado.prioridade ? chamado.prioridade.nome : 'N/A' }}</td>
                         <td>{{ chamado.responsavel_atendimento ? chamado.responsavel_atendimento.nome : 'N/A' }}</td>
                         <td>
-                        <button @click="verDetalhes(chamado.id)" class="btn-detalhes">Detalhes</button>
+                        <router-link :to="{ name: 'DetalheChamado', params: { id: chamado.id } }" class="btn btn-info btn-sm" > Detalhes</router-link>
                         <button @click="editarChamado(chamado.id)" class="btn-editar">Editar</button>
                         <button @click="deletarChamado(chamado.id)" class="btn-deletar">Excluir</button>
                         </td>

@@ -27,6 +27,7 @@ const routes = [
         { path: 'cadastrar-prioridade', component: () => import('@/views/CadastrarPrioridadeView.vue') },
         { path: 'cadastrar-status', component: () => import('@/views/CadastrarStatusView.vue') },
         { path: 'chamados-recorrentes', component: () => import('@/views/ChamadosRecorrentesView.vue') }
+        { path: 'chamados/:id', name: 'DetalheChamado', component: () => import('@/views/DetalheChamadoView.vue')}
         ]
     }
 ]
