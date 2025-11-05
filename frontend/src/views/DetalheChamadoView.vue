@@ -1,0 +1,382 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/services/api' // (Ou como você importa seu axios)
+
+// --- Estado Principal ---
+const chamado = ref(null)
+const logsTimeline = ref([])
+const isLoading = ref(true)
+const erro = ref(null)
+
+// --- Estado para Formulários ---
+const novoComentarioTexto = ref('')
+const edicaoComentario = ref({ id: null, comentario: '' })
+
+// --- Roteamento ---
+const route = useRoute()
+const router = useRouter()
+const chamadoId = route.params.id
+
+// --- 1. FUNÇÕES DE DADOS (API) ---
+
+async function carregarDadosDoChamado() {
+    isLoading.value = true
+    erro.value = null
+    
+    try {
+        // Busca os 2 endpoints principais em paralelo
+        const [resChamado, resLogs] = await Promise.all([
+        api.get(`/chamados/${chamadoId}`),
+        api.get(`/chamados/${chamadoId}/timeline`)
+    ])
+
+    // Armazena os dados
+    chamado.value = resChamado.data
+    logsTimeline.value = resLogs.data
+
+    } catch (err) {
+        console.error("Erro ao buscar dados do chamado:", err)
+        if (err.response && err.response.status === 404) {
+        erro.value = "Chamado não encontrado."
+        } else {
+        erro.value = "Falha ao carregar o histórico do chamado."
+        }
+    } finally {
+        isLoading.value = false
+    }
+}
+
+// --- 2. COMPUTED: O HISTÓRICO MESCLADO ---
+
+const historicoOrdenado = computed(() => {
+    if (!chamado.value) return []
+
+  // Formata as 3 fontes de dados para um padrão único
+    const comentarios = (chamado.value.interacoes || []).map(item => ({
+        tipo: 'comentario',
+        dataHora: item.data_interacao, // <-- Depende da correção no schemas.py!
+        autor: item.usuario ? item.usuario.nome : 'Usuário Desconhecido',
+        conteudo: item.comentario,
+        privado: item.privado,
+        id: item.id,
+        objetoOriginal: item // Para facilitar a edição
+    }))
+
+    const logs = (logsTimeline.value || []).map(item => ({
+        tipo: 'log',
+        dataHora: item.data_hora,
+        autor: item.usuario ? item.usuario.nome : 'Sistema',
+        conteudo: item.acao === 'atualizacao' 
+        ? `alterou o campo '${item.campo}' de '${item.valor_antigo || 'vazio'}' para '${item.valor_novo || 'vazio'}'`
+        : item.valor_novo, // Ex: "Chamado criado"
+        id: item.id
+    }))
+
+    const arquivos = (chamado.value.anexos || []).map(item => ({
+        tipo: 'anexo',
+        dataHora: item.data_upload, // (Checar o nome do campo no seu schema AnexoOut)
+        autor: item.usuario ? item.usuario.nome : 'Usuário Desconhecido',
+        conteudo: item.nome_arquivo_original,
+        url: item.url, // A URL que o backend gera (/anexos/id)
+        id: item.id
+    }))
+
+    // Junta tudo
+    const timeline = [...comentarios, ...logs, ...arquivos]
+
+    // Ordena pela dataHora, do mais antigo para o mais novo
+    return timeline.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora))
+    })
+
+// --- 3. FUNÇÕES DE CRUD (AÇÕES) ---
+
+async function enviarNovoComentario() {
+    if (!novoComentarioTexto.value.trim()) return
+
+    try {
+        const resposta = await api.post(`/chamados/${chamadoId}/interacoes/`, {
+        comentario: novoComentarioTexto.value,
+        privado: false // (Você pode adicionar um checkbox para isso)
+        })
+    
+        // Adiciona o novo comentário otimisticamente
+        chamado.value.interacoes.push(resposta.data)
+        novoComentarioTexto.value = '' // Limpa o campo
+    
+    } catch (err) {
+        console.error("Erro ao enviar comentário", err)
+        alert("Falha ao salvar comentário.")
+    }
+    }
+
+    function iniciarEdicao(comentario) {
+    // Entra no modo de edição para este comentário
+    edicaoComentario.value.id = comentario.id
+    edicaoComentario.value.comentario = comentario.conteudo
+    }
+
+    function cancelarEdicao() {
+    // Sai do modo de edição
+    edicaoComentario.value.id = null
+    edicaoComentario.value.comentario = ''
+    }
+
+    async function salvarEdicao() {
+    if (!edicaoComentario.value.id) return
+        
+    try {
+        const resposta = await api.put(`/interacoes/${edicaoComentario.value.id}`, {
+        comentario: edicaoComentario.value.comentario
+        // (Você pode adicionar 'privado' aqui também se quiser)
+        })
+
+        // Atualiza o comentário na lista local
+        const index = chamado.value.interacoes.findIndex(c => c.id === edicaoComentario.value.id)
+        if (index !== -1) {
+        chamado.value.interacoes[index] = resposta.data
+        }
+    
+    cancelarEdicao() // Sai do modo de edição
+    
+    } catch (err) {
+        console.error("Erro ao salvar edição", err)
+        alert("Falha ao salvar edição.")
+    }
+    }
+
+async function deletarComentario(comentarioId) {
+    if (!confirm("Tem certeza que deseja deletar este comentário?")) return
+
+    try {
+        await api.delete(`/interacoes/${comentarioId}`)
+    
+        // Remove o comentário da lista local
+        chamado.value.interacoes = chamado.value.interacoes.filter(c => c.id !== comentarioId)
+    
+    } catch (err) {
+        console.error("Erro ao deletar comentário", err)
+        alert("Falha ao deletar comentário.")
+    }
+    }
+
+
+// --- 4. LIFECYCLE ---
+onMounted(() => {
+    carregarDadosDoChamado()
+})
+</script>
+
+<template>
+    <div class="detalhe-chamado-container">
+    
+        <div v-if="isLoading" class="loading">
+        Carregando dados do chamado...
+        </div>
+
+        <div v-else-if="erro" class="erro">
+            <p>{{ erro }}</p>
+            <button @click="router.push('/lista-chamados')">Voltar para a Lista</button>
+        </div>
+
+        <div v-else-if="chamado" class="conteudo">
+            
+            <div class="chamado-header">
+                <h1>Chamado #{{ chamado.id }}: {{ chamado.contato }}</h1>
+                <div class="info-bar">
+                    <span><strong>Empresa:</strong> {{ chamado.empresa?.nome || 'N/A' }}</span>
+                    <span><strong>Status:</strong> {{ chamado.status?.nome || 'N/A' }}</span>
+                    <span><strong>Prioridade:</strong> {{ chamado.prioridade?.nome || 'N/A' }}</span>
+                </div>
+            <div class="relato-original">
+                <strong>Relato Original:</strong>
+                <p>{{ chamado.relato }}</p>
+            </div>
+        </div>
+
+        <hr />
+
+        <h2>Histórico do Chamado</h2>
+        <div class="timeline">
+            <div v-for="item in historicoOrdenado" :key="item.tipo + '-' + item.id" class="timeline-item">
+                <div class="timeline-autor">
+                    <strong>{{ item.autor }}</strong>
+                    <small class="timeline-data">{{ new Date(item.dataHora).toLocaleString('pt-BR') }}</small>
+                </div>
+            
+                <div class="timeline-conteudo">
+            
+                    <div v-if="item.tipo === 'log'">
+                        <em>{{ item.conteudo }}</em>
+                    </div>
+
+                    <div v-if="item.tipo === 'anexo'">
+                        <span>Anexou o arquivo: </span>
+                        <a :href="`https://delphisystem-h97d.onrender.com${item.url}`" target="_blank">{{ item.conteudo }}</a>
+                    </div>
+
+                    <div v-if="item.tipo === 'comentario'">
+                    
+                        <div v-if="edicaoComentario.id === item.id" class="comentario-edicao">
+                            <textarea v-model="edicaoComentario.comentario" rows="3"></textarea>
+                            <div class="botoes-edicao">
+                                <button @click="salvarEdicao" class="btn-salvar">Salvar</button>
+                                <button @click="cancelarEdicao" class="btn-cancelar">Cancelar</button>
+                            </div>
+                        </div>
+                
+                        <div v-else class="comentario-exibicao">
+                            <p>{{ item.conteudo }}</p>
+                            <div class="botoes-acao">
+                                <button @click="iniciarEdicao(item)" class="btn-link">Editar</button>
+                                <button @click="deletarComentario(item.id)" class="btn-link btn-link-danger">Deletar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <hr />
+
+        <div class="novo-comentario-form">
+            <h3>Adicionar ao Histórico</h3>
+            <textarea v-model="novoComentarioTexto" rows="4" placeholder="Adicionar um novo comentário..."></textarea>
+                <div class="botoes-novo-comentario">
+                    <button @click="enviarNovoComentario" class="btn-primario">Enviar Comentário</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped>
+/* Um CSS básico para começar. Você pode estilizar melhor */
+.detalhe-chamado-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+.chamado-header {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.info-bar {
+    display: flex;
+    gap: 20px;
+    margin: 10px 0;
+    font-size: 0.9em;
+}
+
+.relato-original p {
+    margin: 5px 0 0 0;
+    padding-left: 10px;
+    border-left: 3px solid #007bff;
+}
+
+.timeline {
+    margin-top: 20px;
+}
+
+.timeline-item {
+    display: grid;
+    grid-template-columns: 150px 1fr; /* Coluna do autor | Coluna do conteúdo */
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.timeline-autor {
+    font-size: 0.9em;
+}
+.timeline-data {
+    display: block;
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* --- Estilos por Tipo --- */
+.tipo-log .timeline-conteudo {
+    font-style: italic;
+    color: #555;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.tipo-anexo .timeline-conteudo {
+    background-color: #f0f8ff;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.tipo-comentario .timeline-conteudo p {
+    margin: 0;
+    white-space: pre-wrap; /* Mantém as quebras de linha do comentário */
+}
+
+/* --- Estilos dos Formulários --- */
+.comentario-edicao textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+.botoes-edicao {
+    margin-top: 5px;
+}
+
+.botoes-acao {
+    display: flex;
+    gap: 10px;
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+.btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #007bff;
+    cursor: pointer;
+}
+.btn-link-danger {
+    color: #dc3545;
+}
+
+.novo-comentario-form {
+    margin-top: 20px;
+}
+.novo-comentario-form textarea {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box; /* Garante que o padding não estoure a largura */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: inherit;
+}
+.botoes-novo-comentario {
+    margin-top: 10px;
+    text-align: right;
+}
+
+/* Botões genéricos */
+.btn-primario, .btn-salvar {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.btn-cancelar {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+</style>
