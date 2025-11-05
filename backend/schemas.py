@@ -153,10 +153,10 @@ class AnexoCreate(AnexoBase):
 
 class AnexoOut(AnexoBase):
     id: int
-    url: str # Adicionamos uma URL para que o frontend saiba como acessar o arquivo
+    url: str 
     chamado_id: int
-    usuario_id: int
     data_upload: datetime
+    usuario: Optional[UsuarioOut] = None
 
     class Config:
         from_attributes = True
@@ -306,5 +306,6 @@ class LogAcaoCreate(LogAcaoBase):
 class LogAcaoOut(LogAcaoBase):
     id: int
     data_hora: datetime
+    usuario: Optional[UsuarioOut] = None
     class Config:
         from_attributes = True

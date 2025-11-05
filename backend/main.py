@@ -3,6 +3,8 @@ from typing import List, Optional
 from pathlib import Path
 from dotenv import load_dotenv 
 
+from sqlalchemy.orm import Session, joinedload
+
 # 1. Define o caminho para a PASTA RAIZ
 ROOT_DIR = Path(__file__).resolve().parent.parent 
 
@@ -301,7 +303,13 @@ def obter_chamado(chamado_id: int, db: Session = Depends(get_db), usuario: Usuar
 
 @app.get("/chamados/{chamado_id}/timeline", response_model=List[LogAcaoOut])
 def timeline_chamado(chamado_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    logs = db.query(LogAcao).filter_by(chamado_id=chamado_id).order_by(LogAcao.data_hora.asc()).all()
+    logs = (
+        db.query(LogAcao)
+        .filter_by(chamado_id=chamado_id)
+        .options(joinedload(LogAcao.usuario))
+        .order_by(LogAcao.data_hora.asc())
+        .all()
+    )
     return logs
 
 @app.post("/chamados/", response_model=ChamadoOut)
