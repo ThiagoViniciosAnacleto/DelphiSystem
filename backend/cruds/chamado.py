@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc as sa_desc, asc as sa_asc # Importa para order_by dinâmico
+from sqlalchemy.orm import Session, joinedload, selectinload
 from backend.models import Chamado, LogAcao, Status
 from backend.schemas import ChamadoCreate, ChamadoUpdate
 from datetime import datetime
@@ -65,9 +66,31 @@ def listar_chamados(
 
 def obter_chamado(db: Session, chamado_id: int) -> Optional[Chamado]:
     """
-    Obtém um chamado específico pelo seu ID.
+    Obtém um chamado específico pelo seu ID, já carregando (eager loading)
+    todos os relacionamentos necessários para o 'ChamadoOut'.
     """
-    return db.query(Chamado).filter_by(id=chamado_id, ativo=True).first()
+    return (
+        db.query(models.Chamado)
+        .filter_by(id=chamado_id, ativo=True)
+        .options(
+            # Carrega objetos 1-para-1 (melhor com joinedload)
+            joinedload(models.Chamado.empresa),
+            joinedload(models.Chamado.prioridade),
+            joinedload(models.Chamado.status),
+            joinedload(models.Chamado.tipo_maquina),
+            joinedload(models.Chamado.origem),
+            joinedload(models.Chamado.responsavel_atendimento),
+            joinedload(models.Chamado.responsavel_acao),
+
+            # Carrega listas N-para-1 (MUITO melhor com selectinload)
+            selectinload(models.Chamado.tags),
+
+            # Carrega as listas e TAMBÉM o 'autor' de cada item da lista
+            selectinload(models.Chamado.interacoes).joinedload(models.Interacao.usuario),
+            selectinload(models.Chamado.anexos).joinedload(models.Anexo.usuario)
+        )
+        .first()
+    )
 
 def atualizar_chamado(db: Session, chamado_id: int, dados: ChamadoUpdate, usuario_id: int) -> Optional[Chamado]:
     """
