@@ -178,6 +178,7 @@ class InteracaoOut(InteracaoBase):
     id: int
     chamado_id: int
     usuario: Optional[UsuarioOut] = None # Para mostrar quem comentou
+    data_interacao: datetime
 
     class Config:
         from_attributes = True
