@@ -239,6 +239,8 @@ class Interacao(Base, SoftDeleteMixin):
     privado = Column(Boolean, default=False, nullable=False) # True para notas internas
     data_interacao = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
+    updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(timezone.utc))
+
     chamado = relationship("Chamado", back_populates="interacoes")
     usuario = relationship("Usuario")
 

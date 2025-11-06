@@ -180,6 +180,8 @@ class InteracaoOut(InteracaoBase):
     usuario: Optional[UsuarioOut] = None # Para mostrar quem comentou
     data_interacao: datetime
 
+    updated_at: Optional[datetime] = None
+
     class Config:
         from_attributes = True
 

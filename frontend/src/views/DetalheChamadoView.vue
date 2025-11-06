@@ -96,7 +96,8 @@ const historicoOrdenado = computed(() => {
         conteudo: item.comentario,
         privado: item.privado,
         id: item.id,
-        objetoOriginal: item 
+        objetoOriginal: item,
+        updated_at: item.updated_at
     }))
 
     const logs = (logsTimeline.value || []).map(item => ({
@@ -375,11 +376,16 @@ onMounted(() => {
         <h2>Histórico do Chamado</h2>
         <div class="timeline">
             <div v-for="item in historicoOrdenado" :key="item.tipo + '-' + item.id" class="timeline-item">
+
                 <div class="timeline-autor">
                     <strong>{{ item.autor }}</strong>
-                    <small class="timeline-data">{{ new Date(item.dataHora).toLocaleString('pt-BR') }}</small>
+                    <small class="timeline-data">
+                    {{ new Date(item.dataHora).toLocaleString('pt-BR') }}
+
+                    <span v-if="item.updated_at" class="editado-info"> (editado)</span>
+
+                    </small>
                 </div>
-            
                 <div class="timeline-conteudo">
             
                     <div v-if="item.tipo === 'log'">
@@ -554,5 +560,11 @@ onMounted(() => {
     border-radius: 5px;
     cursor: pointer;
     margin-left: 5px;
+}
+
+/* edição */
+.editado-info {
+    font-style: italic;
+    color: #6c757d; /* Um cinza sutil */
 }
 </style>
