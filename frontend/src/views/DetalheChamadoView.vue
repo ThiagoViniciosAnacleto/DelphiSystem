@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/services/api' // (Ou como você importa seu axios)
 
 // --- Estado Principal ---
 const chamado = ref(null)
@@ -18,7 +17,30 @@ const route = useRoute()
 const router = useRouter()
 const chamadoId = route.params.id
 
-// --- 1. FUNÇÕES DE DADOS (API) ---
+// --- 1. CONFIGURAÇÃO DA API ---
+const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+};
+
+// Função auxiliar para GET
+const fetchData = async (endpoint) => {
+    try {
+        const res = await fetch(`${baseURL}${endpoint}`, { headers });
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.detail || `Erro HTTP ${res.status} ao carregar ${endpoint}`);
+        }
+        return res.json();
+    } catch (error) {
+        console.error(`Erro ao carregar ${endpoint}:`, error);
+        alert(`Erro ao carregar dados: ${error.message}`);
+        throw error;
+    }
+};
+
+// --- 2. FUNÇÕES DE DADOS (API) ---
 
 async function carregarDadosDoChamado() {
     isLoading.value = true
@@ -26,41 +48,40 @@ async function carregarDadosDoChamado() {
     
     try {
         // Busca os 2 endpoints principais em paralelo
+        // (Modificado para usar 'fetchData' em vez de 'api.get')
         const [resChamado, resLogs] = await Promise.all([
-        api.get(`/chamados/${chamadoId}`),
-        api.get(`/chamados/${chamadoId}/timeline`)
-    ])
+            fetchData(`/chamados/${chamadoId}`),
+            fetchData(`/chamados/${chamadoId}/timeline`)
+        ])
 
-    // Armazena os dados
-    chamado.value = resChamado.data
-    logsTimeline.value = resLogs.data
+        // Armazena os dados (fetchData já retorna o .json())
+        chamado.value = resChamado
+        logsTimeline.value = resLogs
 
     } catch (err) {
         console.error("Erro ao buscar dados do chamado:", err)
-        if (err.response && err.response.status === 404) {
-        erro.value = "Chamado não encontrado."
+        if (err.message.includes("404")) {
+            erro.value = "Chamado não encontrado."
         } else {
-        erro.value = "Falha ao carregar o histórico do chamado."
+            erro.value = "Falha ao carregar o histórico do chamado."
         }
     } finally {
         isLoading.value = false
     }
 }
 
-// --- 2. COMPUTED: O HISTÓRICO MESCLADO ---
-
+// --- 3. COMPUTED: O HISTÓRICO MESCLADO ---
 const historicoOrdenado = computed(() => {
     if (!chamado.value) return []
 
-  // Formata as 3 fontes de dados para um padrão único
     const comentarios = (chamado.value.interacoes || []).map(item => ({
         tipo: 'comentario',
-        dataHora: item.data_interacao, // <-- Depende da correção no schemas.py!
+        dataHora: item.data_interacao,
         autor: item.usuario ? item.usuario.nome : 'Usuário Desconhecido',
         conteudo: item.comentario,
         privado: item.privado,
         id: item.id,
-        objetoOriginal: item // Para facilitar a edição
+        objetoOriginal: item 
     }))
 
     const logs = (logsTimeline.value || []).map(item => ({
@@ -69,99 +90,113 @@ const historicoOrdenado = computed(() => {
         autor: item.usuario ? item.usuario.nome : 'Sistema',
         conteudo: item.acao === 'atualizacao' 
         ? `alterou o campo '${item.campo}' de '${item.valor_antigo || 'vazio'}' para '${item.valor_novo || 'vazio'}'`
-        : item.valor_novo, // Ex: "Chamado criado"
+        : item.valor_novo,
         id: item.id
     }))
 
     const arquivos = (chamado.value.anexos || []).map(item => ({
         tipo: 'anexo',
-        dataHora: item.data_upload, // (Checar o nome do campo no seu schema AnexoOut)
+        dataHora: item.data_upload, 
         autor: item.usuario ? item.usuario.nome : 'Usuário Desconhecido',
         conteudo: item.nome_arquivo_original,
-        url: item.url, // A URL que o backend gera (/anexos/id)
+        url: item.url,
         id: item.id
     }))
 
-    // Junta tudo
     const timeline = [...comentarios, ...logs, ...arquivos]
 
-    // Ordena pela dataHora, do mais antigo para o mais novo
     return timeline.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora))
-    })
+})
 
-// --- 3. FUNÇÕES DE CRUD (AÇÕES) ---
+// --- 4. FUNÇÕES DE CRUD (AÇÕES) ---
+// (Modificadas para usar 'fetch' em vez de 'api.post/put/delete')
 
 async function enviarNovoComentario() {
     if (!novoComentarioTexto.value.trim()) return
 
     try {
-        const resposta = await api.post(`/chamados/${chamadoId}/interacoes/`, {
-        comentario: novoComentarioTexto.value,
-        privado: false // (Você pode adicionar um checkbox para isso)
+        const res = await fetch(`${baseURL}/chamados/${chamadoId}/interacoes/`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                comentario: novoComentarioTexto.value,
+                privado: false 
+            })
         })
-    
-        // Adiciona o novo comentário otimisticamente
-        chamado.value.interacoes.push(resposta.data)
-        novoComentarioTexto.value = '' // Limpa o campo
+        if (!res.ok) { throw new Error(await res.json().then(d => d.detail)) }
+        
+        const resposta = await res.json()
+        chamado.value.interacoes.push(resposta)
+        novoComentarioTexto.value = '' 
     
     } catch (err) {
         console.error("Erro ao enviar comentário", err)
         alert("Falha ao salvar comentário.")
     }
-    }
+}
 
-    function iniciarEdicao(comentario) {
-    // Entra no modo de edição para este comentário
+function iniciarEdicao(comentario) {
     edicaoComentario.value.id = comentario.id
     edicaoComentario.value.comentario = comentario.conteudo
-    }
+}
 
-    function cancelarEdicao() {
-    // Sai do modo de edição
+function cancelarEdicao() {
     edicaoComentario.value.id = null
     edicaoComentario.value.comentario = ''
-    }
+}
 
-    async function salvarEdicao() {
+async function salvarEdicao() {
     if (!edicaoComentario.value.id) return
         
     try {
-        const resposta = await api.put(`/interacoes/${edicaoComentario.value.id}`, {
-        comentario: edicaoComentario.value.comentario
-        // (Você pode adicionar 'privado' aqui também se quiser)
+        const res = await fetch(`${baseURL}/interacoes/${edicaoComentario.value.id}`, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify({
+                comentario: edicaoComentario.value.comentario
+            })
         })
+        if (!res.ok) { throw new Error(await res.json().then(d => d.detail)) }
 
-        // Atualiza o comentário na lista local
+        const resposta = await res.json()
         const index = chamado.value.interacoes.findIndex(c => c.id === edicaoComentario.value.id)
         if (index !== -1) {
-        chamado.value.interacoes[index] = resposta.data
+            chamado.value.interacoes[index] = resposta
         }
-    
-    cancelarEdicao() // Sai do modo de edição
+        
+        cancelarEdicao()
     
     } catch (err) {
         console.error("Erro ao salvar edição", err)
         alert("Falha ao salvar edição.")
     }
-    }
+}
 
 async function deletarComentario(comentarioId) {
     if (!confirm("Tem certeza que deseja deletar este comentário?")) return
 
     try {
-        await api.delete(`/interacoes/${comentarioId}`)
-    
-        // Remove o comentário da lista local
-        chamado.value.interacoes = chamado.value.interacoes.filter(c => c.id !== comentarioId)
+        const res = await fetch(`${baseURL}/interacoes/${comentarioId}`, {
+            method: 'DELETE',
+            headers: headers
+        })
+        
+        // O status 204 (No Content) do FastAPI não retorna JSON, então checamos assim
+        if (res.status === 204) { 
+            // Remove o comentário da lista local
+            chamado.value.interacoes = chamado.value.interacoes.filter(c => c.id !== comentarioId)
+        } else {
+                if (!res.ok) { throw new Error(await res.json().then(d => d.detail)) }
+        }
     
     } catch (err) {
         console.error("Erro ao deletar comentário", err)
         alert("Falha ao deletar comentário.")
     }
-    }
+}
 
 
-// --- 4. LIFECYCLE ---
+// --- 5. LIFECYCLE ---
 onMounted(() => {
     carregarDadosDoChamado()
 })
@@ -251,7 +286,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Um CSS básico para começar. Você pode estilizar melhor */
+/* Um CSS básico para começar. */
 .detalhe-chamado-container {
     padding: 20px;
     max-width: 900px;
