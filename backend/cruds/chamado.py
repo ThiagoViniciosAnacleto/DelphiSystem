@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc as sa_desc, asc as sa_asc # Importa para order_by dinâmico
 from sqlalchemy.orm import Session, joinedload, selectinload
+from backend import models
 from backend.models import Chamado, LogAcao, Status
 from backend.schemas import ChamadoCreate, ChamadoUpdate
 from datetime import datetime
