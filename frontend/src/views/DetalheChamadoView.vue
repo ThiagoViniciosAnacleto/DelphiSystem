@@ -7,6 +7,9 @@ const chamado = ref(null)
 const logsTimeline = ref([])
 const isLoading = ref(true)
 const erro = ref(null)
+const listaStatus = ref([])
+const listaPrioridades = ref([])
+const listaUsuarios = ref([])
 
 // --- Estado para Formulários ---
 const novoComentarioTexto = ref('')
@@ -49,14 +52,26 @@ async function carregarDadosDoChamado() {
     try {
         // Busca os 2 endpoints principais em paralelo
         // (Modificado para usar 'fetchData' em vez de 'api.get')
-        const [resChamado, resLogs] = await Promise.all([
+        const [
+            resChamado, 
+            resLogs,
+            resListaStatus,     
+            resListaPrioridades, 
+            resListaUsuarios     
+            ] = await Promise.all([
             fetchData(`/chamados/${chamadoId}`),
-            fetchData(`/chamados/${chamadoId}/timeline`)
+            fetchData(`/chamados/${chamadoId}/timeline`),
+            fetchData('/status_chamado/'),
+            fetchData('/prioridades/'),         
+            fetchData('/usuarios/')
         ])
 
         // Armazena os dados (fetchData já retorna o .json())
         chamado.value = resChamado
         logsTimeline.value = resLogs
+        listaStatus.value = resListaStatus
+        listaPrioridades.value = resListaPrioridades
+        listaUsuarios.value = resListaUsuarios
 
     } catch (err) {
         console.error("Erro ao buscar dados do chamado:", err)
@@ -145,6 +160,53 @@ function cancelarEdicao() {
     edicaoComentario.value.comentario = ''
 }
 
+/**
+ * Atualiza um único campo do chamado principal (Status, Prioridade, etc.)
+ * @param {string} campo - O nome do campo no backend (ex: "status_id")
+ * @param {*} valor - O novo valor (ex: 3)
+ */
+async function atualizarCampoChamado(campo, valor) {
+  // Cria o "corpo" (payload) da requisição
+    const payload = {
+        [campo]: valor
+    }
+
+    try {
+        // Chama o endpoint PUT /chamados/{id}
+        const res = await fetch(`${baseURL}/chamados/${chamadoId}`, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify(payload)
+        })
+
+    if (!res.ok) { 
+        throw new Error(await res.json().then(d => d.detail || 'Erro desconhecido')) 
+    }
+
+    const chamadoAtualizado = await res.json()
+
+    // --- A MÁGICA ACONTECE AQUI ---
+
+    // 1. Atualiza o cabeçalho (ex: o nome do status)
+    chamado.value = chamadoAtualizado 
+
+    // 2. Busca os logs NOVAMENTE. 
+    // A API (backend) acabou de criar um novo log (ex: "editou prioridade...").
+    // Precisamos buscar a lista de logs atualizada para a timeline.
+    logsTimeline.value = await fetchData(`/chamados/${chamadoId}/timeline`)
+
+    // (Não precisamos recarregar as 'interacoes' ou 'anexos', 
+    // pois o 'chamadoAtualizado' já os traz)
+
+    } catch (err) {
+        console.error(`Erro ao atualizar campo ${campo}:`, err)
+        alert(`Falha ao atualizar o chamado: ${err.message}`)
+
+    // Se falhar, recarregue os dados originais para reverter a mudança no dropdown
+        carregarDadosDoChamado() 
+    }
+}
+
 async function salvarEdicao() {
     if (!edicaoComentario.value.id) return
         
@@ -195,7 +257,6 @@ async function deletarComentario(comentarioId) {
     }
 }
 
-
 // --- 5. LIFECYCLE ---
 onMounted(() => {
     carregarDadosDoChamado()
@@ -218,11 +279,45 @@ onMounted(() => {
             
             <div class="chamado-header">
                 <h1>Chamado #{{ chamado.id }}: {{ chamado.contato }}</h1>
-                <div class="info-bar">
-                    <span><strong>Empresa:</strong> {{ chamado.empresa?.nome || 'N/A' }}</span>
-                    <span><strong>Status:</strong> {{ chamado.status?.nome || 'N/A' }}</span>
-                    <span><strong>Prioridade:</strong> {{ chamado.prioridade?.nome || 'N/A' }}</span>
+                <div class="info-bar-edicao">
+
+                <div class="campo-info">
+                    <label>Empresa:</label>
+                    <strong>{{ chamado.empresa?.nome || 'N/A' }}</strong>
                 </div>
+
+                <div class="campo-info">
+                    <label for="select-status">Status:</label>
+                    <select 
+                        id="select-status"
+                        v-model="chamado.status_id" 
+                        @change="atualizarCampoChamado('status_id', $event.target.value)">
+                        <option v-for="s in listaStatus" :key="s.id" :value="s.id">{{ s.nome }}</option>
+                    </select>
+                </div>
+
+                <div class="campo-info">
+                    <label for="select-prioridade">Prioridade:</label>
+                    <select 
+                        id="select-prioridade"
+                        v-model="chamado.prioridade_id" 
+                        @change="atualizarCampoChamado('prioridade_id', $event.target.value)">
+                        <option v-for="p in listaPrioridades" :key="p.id" :value="p.id">{{ p.nome }}</option>
+                    </select>
+                </div>
+
+                <div class="campo-info">
+                    <label for="select-responsavel">Responsável Ação:</label>
+                    <select 
+                        id="select-responsavel"
+                        v-model="chamado.responsavel_acao_id" 
+                        @change="atualizarCampoChamado('responsavel_acao_id', $event.target.value)">
+                        <option :value="null">Ninguém</option>
+                        <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
+                    </select>
+                </div>
+
+            </div>
             <div class="relato-original">
                 <strong>Relato Original:</strong>
                 <p>{{ chamado.relato }}</p>
