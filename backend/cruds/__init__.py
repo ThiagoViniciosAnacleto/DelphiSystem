@@ -1,4 +1,5 @@
 from .chamado import (
+    obter_chamado,
     criar_chamado,
     listar_chamados,
     atualizar_chamado,
@@ -109,9 +110,9 @@ from .anexo import (
 
 __all__ = [
     # Chamado
+    "obter_chamado",
     "criar_chamado",
     "listar_chamados",
-    "buscar_chamado_por_id",
     "atualizar_chamado",
     "deletar_chamado",
     # ChamadoRecorrente
