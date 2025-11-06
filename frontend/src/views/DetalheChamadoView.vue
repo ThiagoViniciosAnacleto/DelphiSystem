@@ -365,8 +365,8 @@ onMounted(() => {
                 </div>
 
             </div>
-            <div class="relato-original">
-                <strong>Relato Original:</strong>
+            <div class="relato-inicial">
+                <strong>Relato Inicial:</strong>
                 <p>{{ chamado.relato }}</p>
             </div>
         </div>
@@ -439,25 +439,71 @@ onMounted(() => {
     max-width: 900px;
     margin: auto;
 }
-
+/* --- OTIMIZAÇÃO DO CABEÇALHO --- */
 .chamado-header {
     background-color: #f9f9f9;
-    padding: 15px;
+    padding: 20px;
     border-radius: 8px;
-    border: 1px solid #eee;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 20px;
 }
 
-.info-bar {
-    display: flex;
-    gap: 20px;
-    margin: 10px 0;
-    font-size: 0.9em;
+.chamado-header h1 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 2.2em;
+    color: #333;
 }
 
-.relato-original p {
+/* 1. O contêiner principal vira um GRID */
+.info-bar-edicao {
+    display: grid;
+    grid-template-columns: auto 1fr; 
+    gap: 15px 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* 2. Ocupa as 2 colunas para o "Relato Original" */
+.relato-inicial {
+    grid-column: 1 / -1; 
+    margin-top: 10px;
+}
+
+/* 3. Estiliza os labels dentro do grid */
+.campo-info label {
+    font-weight: bold;
+    color: #555;
+    font-size: 0.95em;
+    text-align: right;
+    padding-right: 10px;
+}
+
+/* 4. Estiliza os inputs e o texto da empresa */
+.campo-info select,
+.campo-info strong {
+    width: 100%;
+    max-width: 350px;
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.campo-info strong {
+    background-color: #eee;
+    border-color: #ddd;
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+.relato-inicial p {
     margin: 5px 0 0 0;
-    padding-left: 10px;
-    border-left: 3px solid #007bff;
+    padding: 10px;
+    border-left: 4px solid #007bff;
+    background-color: #fdfdfd;
 }
 
 .timeline {
@@ -466,7 +512,7 @@ onMounted(() => {
 
 .timeline-item {
     display: grid;
-    grid-template-columns: 150px 1fr; /* Coluna do autor | Coluna do conteúdo */
+    grid-template-columns: 150px 1fr;
     gap: 15px;
     padding: 15px;
     border-bottom: 1px solid #eee;
