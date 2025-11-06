@@ -10,7 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     TIMESTAMP,
 )
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -78,12 +78,8 @@ class Usuario(Base, SoftDeleteMixin):
     role_id = Column(Integer, ForeignKey("roles.id", ondelete="SET NULL"), nullable=True)
     role = relationship("Role", back_populates="usuarios")
 
-    created_at = Column(
-        TIMESTAMP, nullable=False, server_default=func.now()
-    )
-    updated_at = Column(
-        TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now()
-    )
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     chamados_atendimento = relationship(
         "Chamado",
@@ -105,9 +101,7 @@ class Empresa(Base, SoftDeleteMixin):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(150), unique=True, index=True, nullable=False)
 
-    created_at = Column(
-        TIMESTAMP, nullable=False, server_default=func.now()
-    )
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     chamados = relationship("Chamado", back_populates="empresa")
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="empresa")
@@ -145,7 +139,7 @@ class Chamado(Base, SoftDeleteMixin):
     empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="SET NULL"), nullable=False, index=True)
     tipo_maquina_id = Column(Integer, ForeignKey("maquinas.id"), nullable=True, index=True)
     origem_id = Column(Integer, ForeignKey("origens_problema.id"), nullable=True, index=True)
-    datetime_abertura = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, index=True)
+    datetime_abertura = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
     contato = Column(String(150), nullable=False, index=True)
     porta_ssh = Column(String(100), nullable=True)
     relato = Column(Text, nullable=False)
@@ -205,7 +199,7 @@ class LogAcao(Base, SoftDeleteMixin):
     chamado_id = Column(Integer, ForeignKey("chamados.id"), nullable=True)
 
     acao = Column(String, nullable=False)
-    data_hora = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    data_hora = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     tipo = Column(String, nullable=True)
     campo = Column(String, nullable=True)
@@ -228,7 +222,7 @@ class Anexo(Base, SoftDeleteMixin):
     path_arquivo_armazenado = Column(String(255), nullable=False, unique=True)
     content_type = Column(String(100), nullable=False)
     tamanho_bytes = Column(Integer, nullable=False)
-    data_upload = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    data_upload = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     chamado = relationship("Chamado", back_populates="anexos")
     usuario = relationship("Usuario")
@@ -243,7 +237,7 @@ class Interacao(Base, SoftDeleteMixin):
 
     comentario = Column(Text, nullable=False)
     privado = Column(Boolean, default=False, nullable=False) # True para notas internas
-    data_interacao = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    data_interacao = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     chamado = relationship("Chamado", back_populates="interacoes")
     usuario = relationship("Usuario")
