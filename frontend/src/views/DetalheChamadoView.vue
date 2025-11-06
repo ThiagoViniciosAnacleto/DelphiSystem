@@ -103,10 +103,9 @@ const historicoOrdenado = computed(() => {
         tipo: 'log',
         dataHora: item.data_hora,
         autor: item.usuario ? item.usuario.nome : 'Sistema',
-        conteudo: item.acao === 'atualizacao' 
-        ? `alterou o campo '${item.campo}' de '${item.valor_antigo || 'vazio'}' para '${item.valor_novo || 'vazio'}'`
-        : item.valor_novo,
-        id: item.id
+        conteudo: formatarLogConteudo(item),
+        id: item.id,
+        objetoOriginal: item
     }))
 
     const arquivos = (chamado.value.anexos || []).map(item => ({
@@ -257,7 +256,54 @@ async function deletarComentario(comentarioId) {
     }
 }
 
-// --- 5. LIFECYCLE ---
+/**
+ * "Traduz" um item de log bruto (ex: status_id=1) 
+ * para um formato legível (ex: Status='Aberto')
+ */
+function formatarLogConteudo(logItem) {
+    const { acao, campo, valor_antigo, valor_novo } = logItem;
+
+    // Se não for uma atualização (ex: "Chamado criado"), só retorna o conteúdo.
+    if (acao !== 'atualizacao') {
+        return logItem.conteudo || acao; 
+    }
+
+    // 1. Traduz o NOME DO CAMPO
+    const nomesCampos = {
+        status_id: 'Status',
+        prioridade_id: 'Prioridade',
+        responsavel_acao_id: 'Responsável (Ação)'
+        // Adicione outros campos aqui se precisar (ex: 'empresa_id')
+    };
+    const nomeCampoTraduzido = nomesCampos[campo] || campo; // Mantém o original se não achar tradução
+
+    // 2. Define os valores padrão (IDs ou "vazio")
+    let antigoTraduzido = valor_antigo || 'vazio';
+    let novoTraduzido = valor_novo || 'vazio';
+
+    // 3. Tenta traduzir os VALORES (IDs) usando as listas que já buscamos
+    try {
+        if (campo === 'status_id') {
+            antigoTraduzido = listaStatus.value.find(s => s.id == valor_antigo)?.nome || antigoTraduzido;
+            novoTraduzido = listaStatus.value.find(s => s.id == valor_novo)?.nome || novoTraduzido;
+        }
+        else if (campo === 'prioridade_id') {
+            antigoTraduzido = listaPrioridades.value.find(p => p.id == valor_antigo)?.nome || antigoTraduzido;
+            novoTraduzido = listaPrioridades.value.find(p => p.id == valor_novo)?.nome || novoTraduzido;
+        }
+        else if (campo === 'responsavel_acao_id') {
+            antigoTraduzido = listaUsuarios.value.find(u => u.id == valor_antigo)?.nome || antigoTraduzido;
+            novoTraduzido = listaUsuarios.value.find(u => u.id == valor_novo)?.nome || novoTraduzido;
+        }
+        }  
+        catch (e) {
+        // Se as listas não carregaram, falha silenciosamente e usa os IDs (valores padrão)
+        console.warn("Falha ao traduzir valores do log, listas podem não estar carregadas.", e);
+    }
+    return `alterou o campo '${nomeCampoTraduzido}' de '${antigoTraduzido}' para '${novoTraduzido}'`;
+}
+
+// --- 6. LIFECYCLE ---
 onMounted(() => {
     carregarDadosDoChamado()
 })
