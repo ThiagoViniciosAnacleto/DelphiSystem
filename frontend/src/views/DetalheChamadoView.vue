@@ -95,6 +95,7 @@ async function carregarDadosDoChamado() {
 const historicoOrdenado = computed(() => {
     if (!chamado.value) return []
 
+    // Mapeamento dos comentários
     const comentarios = (chamado.value.interacoes || []).map(item => ({
         tipo: 'comentario',
         dataHora: item.data_interacao,
@@ -104,8 +105,9 @@ const historicoOrdenado = computed(() => {
         id: item.id,
         objetoOriginal: item,
         updated_at: item.updated_at
-    }))
+    }));
 
+    // Mapeamento dos logs (usa a função de tradução)
     const logs = (logsTimeline.value || []).map(item => ({
         tipo: 'log',
         dataHora: item.data_hora,
@@ -113,8 +115,9 @@ const historicoOrdenado = computed(() => {
         conteudo: formatarLogConteudo(item),
         id: item.id,
         objetoOriginal: item
-    }))
+    }));
 
+// Mapeamento dos anexos
     const arquivos = (chamado.value.anexos || []).map(item => ({
         tipo: 'anexo',
         dataHora: item.data_upload, 
@@ -122,7 +125,7 @@ const historicoOrdenado = computed(() => {
         conteudo: item.nome_arquivo_original,
         url: item.url,
         id: item.id
-    }))
+    }));
 
     const timeline = [...comentarios, ...logs, ...arquivos]
 
@@ -329,92 +332,93 @@ onMounted(() => {
         </div>
 
         <div v-else-if="chamado" class="conteudo">
-            
-            <div class="chamado-header">
-                <h1>Chamado #{{ chamado.id }}: {{ chamado.contato || 'N/A' }}</h1>
-                <div class="info-bar-edicao">
-
-                    <div class="campo-info">
-                        <label>Empresa:</label>
-                        <strong>{{ chamado.empresa?.nome || 'N/A' }}</strong>
-                    </div>
-
-                    <div class="campo-info">
-                        <label for="select-status">Status:</label>
-                        <select 
-                            id="select-status"
-                            v-model="chamado.status_id" 
-                            @change="atualizarCampoChamado('status_id', $event.target.value)">
-                            <option v-for="s in listaStatus" :key="s.id" :value="s.id">{{ s.nome }}</option>
-                        </select>
-                    </div>
-
-                    <div class="campo-info">
-                        <label>Abertura:</label>
-                        <strong>{{ formatarData(chamado.datetime_abertura) || 'N/A' }}</strong>
-                    </div>
-
-                    <div class="campo-info">
-                        <label for="select-prioridade">Prioridade:</label>
-                        <select 
-                            id="select-prioridade"
-                            v-model="chamado.prioridade_id" 
-                            @change="atualizarCampoChamado('prioridade_id', $event.target.value)">
-                            <option v-for="p in listaPrioridades" :key="p.id" :value="p.id">{{ p.nome }}</option>
-                        </select>
-                    </div>
-
-                    <div class="campo-info">
-                        <label for="select-atendimento">Responsável Atendimento:</label>
-                        <select 
-                            id="select-atendimento"
-                            v-model="chamado.responsavel_atendimento_id" 
-                            @change="atualizarCampoChamado('responsavel_atendimento_id', $event.target.value)">
-                            <option :value="null">Ninguém</option>
-                            <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
-                        </select>
-                    </div>
     
-                    <div class="campo-info">
-                        <label for="select-responsavel">Responsável Ação:</label>
-                        <select 
-                            id="select-responsavel"
-                            v-model="chamado.responsavel_acao_id" 
-                            @change="atualizarCampoChamado('responsavel_acao_id', $event.target.value)">
-                            <option :value="null">Ninguém</option>
-                            <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
-                        </select>
-                    </div>
+    <div class="chamado-header">
+        <h1>Chamado #{{ chamado.id }}: {{ chamado.contato || 'N/A' }}</h1> 
+        <div class="info-bar-edicao">
 
-                    <div class="campo-info">
-                        <label for="select-maquina">Tipo de Máquina:</label>
-                        <select 
-                            id="select-maquina"
-                            v-model="chamado.tipo_maquina_id" 
-                            @change="atualizarCampoChamado('tipo_maquina_id', $event.target.value)">
-                            <option :value="null">N/A</option>
-                            <option v-for="m in listaMaquinas" :key="m.id" :value="m.id">{{ m.modelo }}</option>
-                        </select>
-                    </div>
-
-                    <div class="campo-info">
-                        <label for="select-origem">Origem do Problema:</label>
-                        <select 
-                            id="select-origem"
-                            v-model="chamado.origem_id" 
-                            @change="atualizarCampoChamado('origem_id', $event.target.value)">
-                            <option :value="null">N/A</option>
-                            <option v-for="o in listaOrigens" :key="o.id" :value="o.id">{{ o.nome }}</option>
-                        </select>
-                    </div>
-
-                    <div class="relato-inicial">
-                        <strong>Relato Inicial:</strong>
-                        <p>{{ chamado.relato }}</p>
-                    </div>
-
-                </div>
+            <div class="campo-info">
+                <label>Empresa:</label>
+                <strong>{{ chamado.empresa?.nome || 'N/A' }}</strong>
             </div>
+
+            <div class="campo-info">
+                <label for="select-status">Status:</label>
+                <select 
+                    id="select-status"
+                    v-model="chamado.status_id" 
+                    @change="atualizarCampoChamado('status_id', $event.target.value)">
+                    <option v-for="s in listaStatus" :key="s.id" :value="s.id">{{ s.nome }}</option>
+                </select>
+            </div>
+
+            <div class="campo-info">
+                <label>Abertura:</label>
+                <strong>{{ formatarData(chamado.datetime_abertura) || 'N/A' }}</strong>
+            </div>
+
+            <div class="campo-info">
+                <label for="select-prioridade">Prioridade:</label>
+                <select 
+                    id="select-prioridade"
+                    v-model="chamado.prioridade_id" 
+                    @change="atualizarCampoChamado('prioridade_id', $event.target.value)">
+                    <option v-for="p in listaPrioridades" :key="p.id" :value="p.id">{{ p.nome }}</option>
+                </select>
+            </div>
+
+            <div class="campo-info">
+                <label for="select-atendimento">Responsável Atendimento:</label>
+                <select 
+                    id="select-atendimento"
+                    v-model="chamado.responsavel_atendimento_id" 
+                    @change="atualizarCampoChamado('responsavel_atendimento_id', $event.target.value)">
+                    <option :value="null">Ninguém</option>
+                    <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
+                </select>
+            </div>
+
+            <div class="campo-info">
+                <label for="select-responsavel">Responsável Ação:</label>
+                <select 
+                    id="select-responsavel"
+                    v-model="chamado.responsavel_acao_id" 
+                    @change="atualizarCampoChamado('responsavel_acao_id', $event.target.value)">
+                    <option :value="null">Ninguém</option>
+                    <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
+                </select>
+            </div>
+
+            <div class="campo-info">
+                <label for="select-maquina">Tipo de Máquina:</label>
+                <select 
+                    id="select-maquina"
+                    v-model="chamado.tipo_maquina_id" 
+                    @change="atualizarCampoChamado('tipo_maquina_id', $event.target.value)">
+                    <option :value="null">N/A</option>
+                    <option v-for="m in listaMaquinas" :key="m.id" :value="m.id">{{ m.modelo }}</option>
+                </select>
+            </div>
+
+            <div class="campo-info">
+                <label for="select-origem">Origem do Problema:</label>
+                <select 
+                    id="select-origem"
+                    v-model="chamado.origem_id" 
+                    @change="atualizarCampoChamado('origem_id', $event.target.value)">
+                    <option :value="null">N/A</option>
+                    <option v-for="o in listaOrigens" :key="o.id" :value="o.id">{{ o.nome }}</option>
+                </select>
+            </div>
+
+            <div class="relato-inicial">
+                <strong>Relato Inicial:</strong>
+                <p>{{ chamado.relato }}</p>
+            </div>
+
+        </div>
+    </div>
+    </div>
 
         <hr />
 
