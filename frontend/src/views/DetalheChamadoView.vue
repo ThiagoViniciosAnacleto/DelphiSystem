@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
+import { format } from 'date-fns'
 // --- Estado Principal ---
 const chamado = ref(null)
 const logsTimeline = ref([])
@@ -10,6 +10,8 @@ const erro = ref(null)
 const listaStatus = ref([])
 const listaPrioridades = ref([])
 const listaUsuarios = ref([])
+const listaMaquinas = ref([])
+const listaOrigens = ref([])
 
 // --- Estado para Formulários ---
 const novoComentarioTexto = ref('')
@@ -50,20 +52,23 @@ async function carregarDadosDoChamado() {
     erro.value = null
     
     try {
-        // Busca os 2 endpoints principais em paralelo
-        // (Modificado para usar 'fetchData' em vez de 'api.get')
+        // Busca os endpoints principais em paralelo
         const [
             resChamado, 
             resLogs,
             resListaStatus,     
             resListaPrioridades, 
-            resListaUsuarios     
+            resListaUsuarios,
+            resListaMaquinas,
+            resListaOrigens
             ] = await Promise.all([
             fetchData(`/chamados/${chamadoId}`),
             fetchData(`/chamados/${chamadoId}/timeline`),
             fetchData('/status_chamado/'),
             fetchData('/prioridades/'),         
-            fetchData('/usuarios/')
+            fetchData('/usuarios/'),
+            fetchData('/maquinas/'),
+            fetchData('/origens_problema/')
         ])
 
         // Armazena os dados (fetchData já retorna o .json())
@@ -72,7 +77,8 @@ async function carregarDadosDoChamado() {
         listaStatus.value = resListaStatus
         listaPrioridades.value = resListaPrioridades
         listaUsuarios.value = resListaUsuarios
-
+        listaMaquinas.value = resListaMaquinas
+        listaOrigens.value = resListaOrigens
     } catch (err) {
         console.error("Erro ao buscar dados do chamado:", err)
         if (err.message.includes("404")) {
@@ -328,48 +334,87 @@ onMounted(() => {
                 <h1>Chamado #{{ chamado.id }}: {{ chamado.contato }}</h1>
                 <div class="info-bar-edicao">
 
-                <div class="campo-info">
-                    <label>Empresa:</label>
-                    <strong>{{ chamado.empresa?.nome || 'N/A' }}</strong>
-                </div>
+                    <div class="campo-info">
+                        <label>Empresa:</label>
+                        <strong>{{ chamado.empresa?.nome || 'N/A' }}</strong>
+                    </div>
 
-                <div class="campo-info">
-                    <label for="select-status">Status:</label>
-                    <select 
-                        id="select-status"
-                        v-model="chamado.status_id" 
-                        @change="atualizarCampoChamado('status_id', $event.target.value)">
-                        <option v-for="s in listaStatus" :key="s.id" :value="s.id">{{ s.nome }}</option>
-                    </select>
-                </div>
+                    <div class="campo-info">
+                        <label for="select-status">Status:</label>
+                        <select 
+                            id="select-status"
+                            v-model="chamado.status_id" 
+                            @change="atualizarCampoChamado('status_id', $event.target.value)">
+                            <option v-for="s in listaStatus" :key="s.id" :value="s.id">{{ s.nome }}</option>
+                        </select>
+                    </div>
 
-                <div class="campo-info">
-                    <label for="select-prioridade">Prioridade:</label>
-                    <select 
-                        id="select-prioridade"
-                        v-model="chamado.prioridade_id" 
-                        @change="atualizarCampoChamado('prioridade_id', $event.target.value)">
-                        <option v-for="p in listaPrioridades" :key="p.id" :value="p.id">{{ p.nome }}</option>
-                    </select>
-                </div>
+                    <div class="campo-info">
+                        <label>Abertura:</label>
+                        <strong>{{ formatarData(chamado.datetime_abertura) }}</strong>
+                    </div>
 
-                <div class="campo-info">
-                    <label for="select-responsavel">Responsável Ação:</label>
-                    <select 
-                        id="select-responsavel"
-                        v-model="chamado.responsavel_acao_id" 
-                        @change="atualizarCampoChamado('responsavel_acao_id', $event.target.value)">
-                        <option :value="null">Ninguém</option>
-                        <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
-                    </select>
-                </div>
+                    <div class="campo-info">
+                        <label for="select-prioridade">Prioridade:</label>
+                        <select 
+                            id="select-prioridade"
+                            v-model="chamado.prioridade_id" 
+                            @change="atualizarCampoChamado('prioridade_id', $event.target.value)">
+                            <option v-for="p in listaPrioridades" :key="p.id" :value="p.id">{{ p.nome }}</option>
+                        </select>
+                    </div>
 
+                    <div class="campo-info">
+                        <label for="select-atendimento">Responsável Atendimento:</label>
+                        <select 
+                            id="select-atendimento"
+                            v-model="chamado.responsavel_atendimento_id" 
+                            @change="atualizarCampoChamado('responsavel_atendimento_id', $event.target.value)">
+                            <option :value="null">Ninguém</option>
+                            <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
+                        </select>
+                    </div>
+    
+                    <div class="campo-info">
+                        <label for="select-responsavel">Responsável Ação:</label>
+                        <select 
+                            id="select-responsavel"
+                            v-model="chamado.responsavel_acao_id" 
+                            @change="atualizarCampoChamado('responsavel_acao_id', $event.target.value)">
+                            <option :value="null">Ninguém</option>
+                            <option v-for="u in listaUsuarios" :key="u.id" :value="u.id">{{ u.nome }}</option>
+                        </select>
+                    </div>
+
+                    <div class="campo-info">
+                        <label for="select-maquina">Tipo de Máquina:</label>
+                        <select 
+                            id="select-maquina"
+                            v-model="chamado.tipo_maquina_id" 
+                            @change="atualizarCampoChamado('tipo_maquina_id', $event.target.value)">
+                            <option :value="null">N/A</option>
+                            <option v-for="m in listaMaquinas" :key="m.id" :value="m.id">{{ m.modelo }}</option>
+                        </select>
+                    </div>
+
+                    <div class="campo-info">
+                        <label for="select-origem">Origem do Problema:</label>
+                        <select 
+                            id="select-origem"
+                            v-model="chamado.origem_id" 
+                            @change="atualizarCampoChamado('origem_id', $event.target.value)">
+                            <option :value="null">N/A</option>
+                            <option v-for="o in listaOrigens" :key="o.id" :value="o.id">{{ o.nome }}</option>
+                        </select>
+                    </div>
+
+                    <div class="relato-inicial">
+                        <strong>Relato Inicial:</strong>
+                        <p>{{ chamado.relato }}</p>
+                    </div>
+
+                </div>
             </div>
-            <div class="relato-inicial">
-                <strong>Relato Inicial:</strong>
-                <p>{{ chamado.relato }}</p>
-            </div>
-        </div>
 
         <hr />
 
@@ -451,17 +496,19 @@ onMounted(() => {
 .chamado-header h1 {
     margin-top: 0;
     margin-bottom: 25px;
-    font-size: 2.2em;
+    font-size: 2.2em; /* 2.2em */
     color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
 }
 
 /* 1. O contêiner principal vira um GRID */
 .info-bar-edicao {
     display: grid;
-    grid-template-columns: auto 1fr; 
-    gap: 15px 10px;
-    align-items: center;
-    margin-bottom: 20px;
+    /* Duas colunas de tamanho igual */
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px 25px; /* Espaço entre linhas e colunas */
+    align-items: start; /* Alinha os itens no topo */
 }
 
 /* 2. Ocupa as 2 colunas para o "Relato Original" */
@@ -474,37 +521,77 @@ onMounted(() => {
 .campo-info label {
     font-weight: bold;
     color: #555;
-    font-size: 0.95em;
-    text-align: right;
-    padding-right: 10px;
+    font-size: 0.9em; /* 0.9em */
+    display: block; /* Faz o label ocupar a linha toda */
+    margin-bottom: 6px; /* Espaço entre o label e o input */
 }
 
 /* 4. Estiliza os inputs e o texto da empresa */
 .campo-info select,
 .campo-info strong {
     width: 100%;
-    max-width: 350px;
-    padding: 8px 10px;
+    padding: 9px 10px; /* 9px 10px */
     border: 1px solid #ced4da;
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 0.95rem; /* 0.95rem */
     background-color: #fff;
-    box-sizing: border-box;
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
+    font-family: inherit;
 }
 
 .campo-info strong {
-    background-color: #eee;
+    background-color: #eee; /* Fundo cinza para campos "read-only" */
     border-color: #ddd;
-    padding-top: 9px;
-    padding-bottom: 9px;
+    display: block; /* Garante que o 'strong' se comporte como o 'select' */
+    color: #333;
+}
+
+.relato-inicial {
+    grid-column: 1 / -1; 
+    margin-top: 10px;
+}
+
+.relato-inicial strong {
+    font-size: 0.95em; /* 0.95em */
+    font-weight: bold;
+    color: #555;
 }
 
 .relato-inicial p {
-    margin: 5px 0 0 0;
-    padding: 10px;
+    margin: 8px 0 0 0;
+    padding: 12px;
     border-left: 4px solid #007bff;
     background-color: #fdfdfd;
+    white-space: pre-wrap; /* Mantém as quebras de linha do relato */
 }
+
+@media (max-width: 768px) {
+    
+    .chamado-header h1 {
+      font-size: 1.8em; /* 1.8em */
+    }
+
+    /* 1. Cabeçalho vira 1 coluna */
+    .info-bar-edicao {
+        grid-template-columns: 1fr; /* Apenas 1 coluna */
+        gap: 15px; 
+    }
+    
+    .relato-inicial {
+       grid-column: auto; /* Reseta o span no mobile */
+    }
+
+    /* 2. Timeline vira 1 coluna */
+    .timeline-item {
+        grid-template-columns: 1fr; /* Apenas 1 coluna */
+        gap: 5px;
+    }
+    .timeline-autor {
+        margin-bottom: 5px;
+    }
+}
+
+/* Histórico do chamado */
 
 .timeline {
     margin-top: 20px;
