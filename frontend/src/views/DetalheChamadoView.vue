@@ -331,7 +331,7 @@ onMounted(() => {
         <div v-else-if="chamado" class="conteudo">
             
             <div class="chamado-header">
-                <h1>Chamado #{{ chamado.id }}: {{ chamado.contato }}</h1>
+                <h1>Chamado #{{ chamado.id }}: {{ chamado.contato || 'N/A' }}</h1>
                 <div class="info-bar-edicao">
 
                     <div class="campo-info">
@@ -351,7 +351,7 @@ onMounted(() => {
 
                     <div class="campo-info">
                         <label>Abertura:</label>
-                        <strong>{{ formatarData(chamado.datetime_abertura) }}</strong>
+                        <strong>{{ formatarData(chamado.datetime_abertura) || 'N/A' }}</strong>
                     </div>
 
                     <div class="campo-info">
