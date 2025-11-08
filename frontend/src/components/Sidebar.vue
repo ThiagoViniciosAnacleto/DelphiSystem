@@ -32,7 +32,7 @@
 
         <li>
           <router-link to="/cadastrar-maquina">
-            <button type="button">🛠️ Cadastrar Máquina</button>
+            <button type="button">🛠️ Cadastrar Dispositivo</button>
           </router-link>
         </li>
         
