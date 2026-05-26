@@ -20,6 +20,7 @@ from fastapi import Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import shutil
+from backend.routers import empresas
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
 from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
@@ -36,6 +37,8 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 app = FastAPI()
+
+app.include_router(empresas.router)
 
 # MUDANÇA TEMPORÁRIA
 app.add_middleware(
@@ -90,37 +93,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             "role": role_final
         }
     }
-
-# ---------------------- EMPRESAS ----------------------
-@app.get("/empresas/", response_model=List[EmpresaOut])
-def listar_empresas(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    print("🛰️ Requisição recebida em /empresas")
-    return cruds.listar_empresas(db)
-
-@app.get("/empresas/{empresa_id}", response_model=EmpresaOut)
-def obter_empresa(empresa_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    empresa = cruds.obter_empresa(db, empresa_id)
-    if not empresa:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    return empresa
-
-@app.post("/empresas/", response_model=EmpresaOut)
-def criar_empresa(empresa: EmpresaCreate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    return cruds.criar_empresa(db, empresa)
-
-@app.put("/empresas/{empresa_id}", response_model=EmpresaOut)
-def atualizar_empresa(empresa_id: int, dados: EmpresaUpdate, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    empresa = cruds.atualizar_empresa(db, empresa_id, dados)
-    if not empresa:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    return empresa
-
-@app.delete("/empresas/{empresa_id}")
-def deletar_empresa(empresa_id: int, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
-    resultado = cruds.deletar_empresa(db, empresa_id)
-    if not resultado:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    return {"detail": "Empresa removida"}
 
 # ---------------------- MAQUINAS ----------------------
 @app.get("/maquinas/", response_model=List[MaquinaOut])
