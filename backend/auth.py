@@ -145,6 +145,11 @@ class RoleChecker:
             )
         return current_user
 
+admin_only = RoleChecker(["admin"])
+
+tecnico_ou_admin = RoleChecker(["admin", "tecnico"])
+
+
 ## --- Serviço de Envio de E-mail (SendGrid) ---
 
 def enviar_email_recuperacao(destinatario: str, link_recuperacao: str):
