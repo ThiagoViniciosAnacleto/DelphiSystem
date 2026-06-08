@@ -43,5 +43,6 @@ jobs:
     - name: Executar Bateria de Testes e Cobertura (V&V)
       env:
         DATABASE_URL: postgresql://postgres:password@localhost:5432/delphi_test
+        SECRET_KEY: "chave_ficticia_para_ambiente_de_testes_automatizados" # <-- Adicione esta linha aqui
       run: |
         pytest backend/tests/ --cov=backend --cov-report=term-missing
