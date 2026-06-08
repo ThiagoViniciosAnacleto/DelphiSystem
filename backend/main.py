@@ -20,11 +20,7 @@ from fastapi import Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import shutil
-<<<<<<< HEAD
-from backend.routers import empresas
-=======
 from backend.routers import empresas, usuarios
->>>>>>> feature/refatoracao-arquitetural
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
 from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
