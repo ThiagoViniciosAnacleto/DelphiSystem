@@ -20,7 +20,11 @@ from fastapi import Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import shutil
+<<<<<<< HEAD
 from backend.routers import empresas
+=======
+from backend.routers import empresas, usuarios
+>>>>>>> feature/refatoracao-arquitetural
 from backend.models import LogAcao, Usuario
 from backend.database import SessionLocal, engine, Base
 from backend.auth import RoleChecker,get_current_user,criar_token_acesso, verificar_token, enviar_email_recuperacao
@@ -39,6 +43,10 @@ FRONTEND_URL = os.getenv("FRONTEND_URL")
 app = FastAPI()
 
 app.include_router(empresas.router)
+<<<<<<< HEAD
+=======
+app.include_router(usuarios.router)
+>>>>>>> feature/refatoracao-arquitetural
 
 # MUDANÇA TEMPORÁRIA
 app.add_middleware(
@@ -566,6 +574,7 @@ def deletar_log(log_id: int, db: Session = Depends(get_db), usuario: UsuarioOut 
         raise HTTPException(status_code=404, detail="Log não encontrado")
     return {"detail": "Log removido"}
 
+<<<<<<< HEAD
 # ---------------------- USUÁRIOS ----------------------
 @app.get("/usuarios/", response_model=List[UsuarioOut])
 def listar_usuarios(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
@@ -634,6 +643,8 @@ def deletar_usuario(
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return {"detail": "Usuário removido"}
 
+=======
+>>>>>>> feature/refatoracao-arquitetural
 # ---------------------- DASHBOARD ----------------------
 @app.get("/dashboard/basico")
 def dashboard_basico(db: Session = Depends(get_db), usuario: UsuarioOut = Depends(get_current_user)):
