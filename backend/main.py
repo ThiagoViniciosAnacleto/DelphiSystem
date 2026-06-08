@@ -39,13 +39,10 @@ FRONTEND_URL = os.getenv("FRONTEND_URL")
 app = FastAPI()
 
 app.include_router(empresas.router)
-<<<<<<< HEAD
-=======
 app.include_router(usuarios.router)
->>>>>>> feature/refatoracao-arquitetural
 
 # MUDANÇA TEMPORÁRIA
-app.add_middleware(
+app.add_middleware( 
     CORSMiddleware,
     allow_origins=[FRONTEND_URL],
     allow_credentials=True,
