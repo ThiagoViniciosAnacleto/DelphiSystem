@@ -1,10 +1,9 @@
 ## --- Importações ---
 import os
-import smtplib
+import json
+import urllib.request
 from datetime import datetime, timedelta
 from typing import Optional, List
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 # Dependências de Terceiros
 from jose import JWTError, jwt
@@ -22,10 +21,6 @@ from backend import models
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 horas
-
-# Chaves para o serviço de e-mail (SMTP nativo)
-EMAIL_ORIGEM = os.getenv("EMAIL_ORIGEM")
-EMAIL_SENHA_APP = os.getenv("EMAIL_SENHA_APP")
 
 # Contexto do Passlib para senhas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -147,55 +142,64 @@ class RoleChecker:
         return current_user
 
 admin_only = RoleChecker(["admin"])
-
 tecnico_ou_admin = RoleChecker(["admin", "tecnico"])
 
 
-## --- Serviço de Envio de E-mail (SMTP Gmail Nativo) ---
+## --- Serviço de Envio de E-mail (Brevo API nativa HTTPS) ---
 
 def enviar_email_recuperacao(destinatario: str, link_recuperacao: str):
     """
-    Envia um e-mail de recuperação de senha usando o SMTP nativo do Gmail.
+    Envia um e-mail de recuperação de senha usando a API HTTPS do Brevo.
+    As variáveis são lidas dentro da função para evitar amnésia de cache do Render.
     """
-    # Verifica se as variáveis de ambiente essenciais foram carregadas
-    if not EMAIL_ORIGEM or not EMAIL_SENHA_APP:
-        print("ERRO DE CONFIGURAÇÃO: EMAIL_ORIGEM ou EMAIL_SENHA_APP não definidas.")
-        raise RuntimeError("Erro ao enviar e-mail: Configuração do servidor incompleta.")
+    email_remetente = os.getenv("EMAIL_ORIGEM")
+    api_key = os.getenv("BREVO_API_KEY")
 
-    # Criação do contêiner da mensagem
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Recuperação de Senha - Delphi System"
-    msg["From"] = EMAIL_ORIGEM
-    msg["To"] = destinatario
+    # Validação rigorosa para logar o problema real
+    if not email_remetente:
+        print("❌ ERRO: A variável 'EMAIL_ORIGEM' não foi encontrada.")
+        raise HTTPException(status_code=500, detail="Configuração de remetente incompleta no servidor.")
+        
+    if not api_key:
+        print("❌ ERRO: A variável 'BREVO_API_KEY' não foi encontrada.")
+        raise HTTPException(status_code=500, detail="Chave de API do Brevo incompleta no servidor.")
 
-    # Template HTML profissional para o Delphi System
+    url = "https://api.brevo.com/v3/smtp/email"
+    
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
         <h2 style="color: #333;">Recuperação de Senha</h2>
         <p style="color: #555; line-height: 1.6;">Olá,</p>
-        <p style="color: #555; line-height: 1.6;">Recebemos uma solicitação para redefinir sua senha no <strong>Delphi System</strong>.</p>
+        <p style="color: #555; line-height: 1.6;">Recebemos uma solicitação para redefinir a sua senha no <strong>Delphi System</strong>.</p>
         <p style="color: #555; line-height: 1.6;">Clique no botão abaixo para criar uma nova senha (este link é válido por 30 minutos):</p>
         <div style="text-align: center; margin: 30px 0;">
             <a href="{link_recuperacao}" style="background-color: #007BFF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Redefinir Minha Senha</a>
         </div>
-        <p style="color: #555; line-height: 1.6; font-size: 14px;">Se você não solicitou essa alteração, basta ignorar este e-mail. Nenhuma mudança será feita na sua conta.</p>
+        <p style="color: #555; line-height: 1.6; font-size: 14px;">Se não solicitou esta alteração, basta ignorar este e-mail. Nenhuma mudança será feita na sua conta.</p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="color: #999; font-size: 12px; text-align: center;">Equipe Técnica - Delphi System</p>
     </div>
     """
 
-    # Anexa o HTML à mensagem
-    part = MIMEText(html_content, "html")
-    msg.attach(part)
+    payload = {
+        "sender": {"email": email_remetente, "name": "Delphi System"},
+        "to": [{"email": destinatario}],
+        "subject": "Recuperação de Senha - Delphi System",
+        "htmlContent": html_content
+    }
+
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(url, data=data, headers={
+        "api-key": api_key,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    })
 
     try:
-        # Conecta ao servidor do Gmail usando a porta oficial de submissão (587)
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()  # Ativa a criptografia TLS exigida pelo Google
-            server.login(EMAIL_ORIGEM, EMAIL_SENHA_APP)
-            server.sendmail(EMAIL_ORIGEM, destinatario, msg.as_string())
-            
-        print(f"📧 E-mail de recuperação enviado via Gmail para {destinatario}!")
+        with urllib.request.urlopen(req) as response:
+            status_code = response.getcode()
+            print(f"📧 E-mail de recuperação enviado via Brevo API! Status: {status_code}")
     except Exception as e:
-        print(f"ERRO SMTP DO GMAIL: {e}")
-        raise RuntimeError(f"Erro ao enviar e-mail via SMTP Gmail. Detalhes: {e}")
+        print(f"❌ ERRO API BREVO: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao disparar e-mail via Brevo API: {e}")
