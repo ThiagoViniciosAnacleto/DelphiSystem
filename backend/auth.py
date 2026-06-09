@@ -189,8 +189,9 @@ def enviar_email_recuperacao(destinatario: str, link_recuperacao: str):
     msg.attach(part)
 
     try:
-        # Conecta ao servidor seguro do Gmail
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        # Conecta ao servidor do Gmail usando a porta oficial de submissão (587)
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()  # Ativa a criptografia TLS exigida pelo Google
             server.login(EMAIL_ORIGEM, EMAIL_SENHA_APP)
             server.sendmail(EMAIL_ORIGEM, destinatario, msg.as_string())
             
