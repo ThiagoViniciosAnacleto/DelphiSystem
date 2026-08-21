@@ -1,7 +1,7 @@
 """adiciona suporte a timezone nas colunas de data
 
 Revision ID: 5d548f00872c
-Revises: 
+Revises:
 Create Date: 2025-11-06 16:21:30.417971
 
 """

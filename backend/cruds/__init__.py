@@ -4,11 +4,15 @@ from .chamado import (
     listar_chamados,
     atualizar_chamado,
     deletar_chamado,
+    verificar_acesso_chamado,
 )
+
 
 from .chamado_recorrente import (
     criar_chamado_recorrente,
     listar_chamados_recorrentes,
+    obter_chamado_recorrente,
+    buscar_chamado_recorrente_por_id,
     atualizar_chamado_recorrente,
     deletar_chamado_recorrente,
 )
@@ -16,6 +20,9 @@ from .chamado_recorrente import (
 from .empresa import (
     criar_empresa,
     listar_empresas,
+    obter_empresas,
+    obter_empresa,
+    buscar_empresa_por_id,
     atualizar_empresa,
     deletar_empresa,
 )
@@ -23,9 +30,19 @@ from .empresa import (
 from .frequencia import (
     criar_frequencia,
     listar_frequencias,
+    obter_frequencia,
+    buscar_frequencia_por_id,
     atualizar_frequencia,
     deletar_frequencia,
 )
+
+from .dashboard import (
+    contar_chamados_por_status,
+    chamados_por_empresa,
+    chamados_por_tecnico,
+    chamados_ultimos_7_dias,
+)
+
 
 from .log_acao import (
     criar_log_acao,
@@ -78,16 +95,18 @@ from .usuario import (
     criar_usuario,
     listar_usuarios,
     buscar_usuario_por_id,
+    get_usuario,
     atualizar_usuario,
     deletar_usuario,
     get_usuario_por_email,
 )
 
+
 from .tag import (
-    criar_tag, 
-    listar_tags, 
-    buscar_tag_por_id, 
-    buscar_tag_por_nome, 
+    criar_tag,
+    listar_tags,
+    buscar_tag_por_id,
+    buscar_tag_por_nome,
     deletar_tag,
     adicionar_tag_a_chamado,
     remover_tag_de_chamado,
@@ -115,7 +134,9 @@ __all__ = [
     "listar_chamados",
     "atualizar_chamado",
     "deletar_chamado",
+    "verificar_acesso_chamado",
     # ChamadoRecorrente
+
     "criar_chamado_recorrente",
     "listar_chamados_recorrentes",
     "buscar_chamado_recorrente_por_id",
@@ -176,10 +197,10 @@ __all__ = [
     "deletar_usuario",
     "get_usuario_por_email",
     # Tag
-    "criar_tag", 
-    "listar_tags", 
-    "buscar_tag_por_id", 
-    "buscar_tag_por_nome", 
+    "criar_tag",
+    "listar_tags",
+    "buscar_tag_por_id",
+    "buscar_tag_por_nome",
     "deletar_tag",
     "adicionar_tag_a_chamado",
     "remover_tag_de_chamado",

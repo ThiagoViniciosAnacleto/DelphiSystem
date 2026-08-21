@@ -1,4 +1,23 @@
+﻿# Ambiente
 .env
+env.env
 
+# Python / Caches
 __pycache__/
-*.pyc
+*.py[cod]
+*.class
+.pytest_cache/
+
+# Banco de dados temporários e locais
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads gerados em runtime
+uploads/*
+!uploads/.gitkeep
+
+# Frontend build & caches
+frontend/dist/
+frontend/node_modules/
+node_modules/

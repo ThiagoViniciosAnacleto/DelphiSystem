@@ -27,41 +27,37 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import apiClient from '../services/api'
 
 const origens = ref([])
 const novaOrigem = ref({ nome: '' })
 const editandoId = ref(null)
-
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
-const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-}
+const erro = ref('')
 
 const carregarOrigens = async () => {
     try {
-        const res = await fetch(`${baseURL}/origens_problema/`, { headers })
-        origens.value = await res.json()
+        erro.value = ''
+        origens.value = await apiClient.get('/origens_problema/')
     } catch (err) {
-    console.error('Erro ao carregar origens:', err)
+        erro.value = 'Erro ao carregar origens: ' + (err.message || 'Erro de comunicação')
     }
 }
 
 const salvarOrigem = async () => {
-    const url = editandoId.value
-        ? `${baseURL}/origens_problema/${editandoId.value}`
-        : `${baseURL}/origens_problema/`
+    try {
+        erro.value = ''
+        if (editandoId.value) {
+            await apiClient.put(`/origens_problema/${editandoId.value}`, novaOrigem.value)
+        } else {
+            await apiClient.post('/origens_problema/', novaOrigem.value)
+        }
 
-    const method = editandoId.value ? 'PUT' : 'POST'
-
-    await fetch(url, {
-    method,
-    headers,
-    body: JSON.stringify(novaOrigem.value)
-    })
-
-    resetarFormulario()
-    carregarOrigens()
+        resetarFormulario()
+        await carregarOrigens()
+    } catch (err) {
+        erro.value = 'Erro ao salvar origem: ' + (err.message || 'Erro de comunicação')
+        alert(erro.value)
+    }
 }
 
 const editar = (origem) => {
@@ -71,11 +67,13 @@ const editar = (origem) => {
 
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta origem?')) {
-        await fetch(`${baseURL}/origens_problema/${id}`, {
-        method: 'DELETE',
-        headers
-    })
-    carregarOrigens()
+        try {
+            erro.value = ''
+            await apiClient.delete(`/origens_problema/${id}`)
+            await carregarOrigens()
+        } catch (err) {
+            alert('Falha ao desativar origem: ' + (err.message || 'Erro de comunicação'))
+        }
     }
 }
 
@@ -86,6 +84,7 @@ const resetarFormulario = () => {
 
 onMounted(carregarOrigens)
 </script>
+
 
 <style scoped>
 .origens {

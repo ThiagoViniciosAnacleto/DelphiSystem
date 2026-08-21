@@ -37,14 +37,16 @@ class UsuarioUpdate(BaseModel):
     role_id: Optional[int] = None
     ativo: Optional[bool] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UsuarioOut(UsuarioBase):
     id: int
-    
+    role_id: Optional[int] = None
+    ativo: Optional[bool] = True
     role: Optional[RoleOut] = None
     class Config:
         from_attributes = True
+
 
 # ---------- Empresa ----------
 class EmpresaBase(BaseModel):
@@ -130,17 +132,20 @@ class StatusOut(StatusBase):
 # ---------- Frequencia ----------
 class FrequenciaBase(BaseModel):
     nome: str
+    dias: Optional[int] = 30
 
 class FrequenciaCreate(FrequenciaBase):
     pass
 
 class FrequenciaUpdate(BaseModel):
     nome: Optional[str] = None
+    dias: Optional[int] = None
 
 class FrequenciaOut(FrequenciaBase):
     id: int
     class Config:
         from_attributes = True
+
 
 # ---------- Anexo ----------
 class AnexoBase(BaseModel):
@@ -153,7 +158,7 @@ class AnexoCreate(AnexoBase):
 
 class AnexoOut(AnexoBase):
     id: int
-    url: str 
+    url: Optional[str] = None
     chamado_id: int
     data_upload: datetime
     usuario: Optional[UsuarioOut] = None
@@ -207,11 +212,11 @@ class TagOut(TagBase):
 class ChamadoBase(BaseModel):
     contato: str
     relato: str
+    empresa_id: int
+    prioridade_id: Optional[int] = None
+    status_id: Optional[int] = None
     porta_ssh: Optional[str] = None
     acao_realizada: Optional[str] = None
-    prioridade_id: Optional[int] = None
-    status_id: Optional[int] = 1
-    empresa_id: int
     tipo_maquina_id: Optional[int] = None
     origem_id: Optional[int] = None
     responsavel_atendimento_id: Optional[int] = None
@@ -233,7 +238,7 @@ class ChamadoUpdate(BaseModel):
     origem_id: Optional[int] = None
     responsavel_atendimento_id: Optional[int] = None
     responsavel_acao_id: Optional[int] = None
-    ativo: Optional[bool] = None 
+    ativo: Optional[bool] = None
 
 class ChamadoOut(ChamadoBase):
     id: int
@@ -244,6 +249,8 @@ class ChamadoOut(ChamadoBase):
     status: Optional["StatusOut"] = None
     tipo_maquina: Optional["MaquinaOut"] = None
     origem: Optional["OrigemProblemaOut"] = None
+    criado_por_id: Optional[int] = None
+    criado_por: Optional["UsuarioOut"] = None
     responsavel_atendimento: Optional["UsuarioOut"] = None
     responsavel_acao: Optional["UsuarioOut"] = None
     anexos: List[AnexoOut] = []
@@ -258,15 +265,16 @@ class ChamadoOut(ChamadoBase):
 # ---------- ChamadoRecorrente ----------
 class ChamadoRecorrenteBase(BaseModel):
     cliente: str
-    porta_ssh: Optional[str]
+    porta_ssh: Optional[str] = None
     relato: str
-    descricao_acao: Optional[str]
-    prioridade_id: Optional[int]
-    empresa_id: Optional[int]
-    tipo_maquina_id: Optional[int]
-    origem_id: Optional[int]
-    responsavel_atendimento_id: Optional[int]
-    responsavel_acao_id: Optional[int]
+    acao_realizada: Optional[str] = None
+    descricao_acao: Optional[str] = None
+    prioridade_id: Optional[int] = None
+    empresa_id: Optional[int] = None
+    tipo_maquina_id: Optional[int] = None
+    origem_id: Optional[int] = None
+    responsavel_atendimento_id: Optional[int] = None
+    responsavel_acao_id: Optional[int] = None
     frequencia_id: int
     proxima_execucao: datetime
 
@@ -277,6 +285,7 @@ class ChamadoRecorrenteUpdate(BaseModel):
     cliente: Optional[str] = None
     porta_ssh: Optional[str] = None
     relato: Optional[str] = None
+    acao_realizada: Optional[str] = None
     descricao_acao: Optional[str] = None
     prioridade_id: Optional[int] = None
     empresa_id: Optional[int] = None
@@ -291,6 +300,7 @@ class ChamadoRecorrenteOut(ChamadoRecorrenteBase):
     id: int
     class Config:
         from_attributes = True
+
 
 
 # ---------- LogAcao ----------

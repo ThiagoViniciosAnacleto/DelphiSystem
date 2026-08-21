@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-ROOT_DIR = Path(__file__).resolve().parent.parent 
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 # 2. Aponta para o arquivo .env que está lá na raiz
 env_path = ROOT_DIR / ".env"
@@ -75,7 +75,7 @@ def popular_banco():
                 print(f"Frequência '{freq['nome']}' criada com sucesso.")
             else:
                 print(f"Frequência '{freq['nome']}' já existe.")
-        
+
         # 5. Popular Origens do Problema
         print("\n--- Populando Origens do Problema ---")
         origens_iniciais = ["Telefone", "E-mail", "Sistema de Monitoramento", "Visita Técnica"]

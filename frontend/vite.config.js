@@ -8,5 +8,9 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)), // define que "@" aponta para "src/"
     }
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
   }
 })

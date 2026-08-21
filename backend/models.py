@@ -16,12 +16,13 @@ from sqlalchemy.orm import relationship, declarative_base
 Base = declarative_base()
 
 chamados_tags = Table('chamados_tags', Base.metadata,
-    Column('chamado_id', Integer, ForeignKey('chamados.id'), primary_key=True),
-    Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True)
+    Column('chamado_id', Integer, ForeignKey('chamados.id', ondelete="CASCADE"), primary_key=True),
+    Column('tag_id', Integer, ForeignKey('tags.id', ondelete="CASCADE"), primary_key=True)
 )
 
 class SoftDeleteMixin:
     ativo = Column(Boolean, nullable=False, default=True, index=True)
+
 
 class Role(Base, SoftDeleteMixin):
     """Tabela de cargos/perfis de usuários (ex: admin, técnico, comum)."""
@@ -60,9 +61,10 @@ class Frequencia(Base):
 
     id = Column(Integer, primary_key=True)
     nome = Column(String(50), unique=True, nullable=False)
-    dias = Column(Integer, nullable=False)
+    dias = Column(Integer, nullable=False, default=30)
 
     chamados_recorrentes = relationship("ChamadoRecorrente", back_populates="frequencia")
+
 
 
 class Usuario(Base, SoftDeleteMixin):
@@ -90,6 +92,11 @@ class Usuario(Base, SoftDeleteMixin):
         "Chamado",
         back_populates="responsavel_acao",
         foreign_keys="Chamado.responsavel_acao_id",
+    )
+    chamados_criados = relationship(
+        "Chamado",
+        back_populates="criado_por",
+        foreign_keys="Chamado.criado_por_id",
     )
     log_acoes = relationship("LogAcao", back_populates="usuario")
 
@@ -134,9 +141,11 @@ class Chamado(Base, SoftDeleteMixin):
     __tablename__ = "chamados"
 
     id = Column(Integer, primary_key=True, index=True)
+    criado_por_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True)
     responsavel_atendimento_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     responsavel_acao_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
-    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="SET NULL"), nullable=False, index=True)
+    empresa_id = Column(Integer, ForeignKey("empresas.id"), nullable=False, index=True)
+
     tipo_maquina_id = Column(Integer, ForeignKey("maquinas.id"), nullable=True, index=True)
     origem_id = Column(Integer, ForeignKey("origens_problema.id"), nullable=True, index=True)
     datetime_abertura = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
@@ -148,9 +157,16 @@ class Chamado(Base, SoftDeleteMixin):
     acao_realizada = Column(Text, nullable=True)
     prioridade = relationship("Prioridade", back_populates="chamados")
     status = relationship("Status", back_populates="chamados")
-    responsavel_atendimento = relationship("Usuario",
-    foreign_keys=[responsavel_atendimento_id],
-    back_populates="chamados_atendimento")
+    criado_por = relationship(
+        "Usuario",
+        foreign_keys=[criado_por_id],
+        back_populates="chamados_criados"
+    )
+    responsavel_atendimento = relationship(
+        "Usuario",
+        foreign_keys=[responsavel_atendimento_id],
+        back_populates="chamados_atendimento"
+    )
     responsavel_acao = relationship("Usuario", foreign_keys=[responsavel_acao_id], back_populates="chamados_acao")
     empresa = relationship("Empresa", back_populates="chamados")
     tipo_maquina = relationship("Maquina", back_populates="chamados")
@@ -158,7 +174,8 @@ class Chamado(Base, SoftDeleteMixin):
     logs = relationship("LogAcao", back_populates="chamado")
     anexos = relationship("Anexo", back_populates="chamado")
     interacoes = relationship("Interacao", back_populates="chamado")
-    tags = relationship("Tag",secondary=chamados_tags, back_populates="chamados")
+    tags = relationship("Tag", secondary=chamados_tags, back_populates="chamados")
+
 
 class ChamadoRecorrente(Base, SoftDeleteMixin):
     """Tabela de chamados recorrentes, gerenciando frequências e próximas execuções."""

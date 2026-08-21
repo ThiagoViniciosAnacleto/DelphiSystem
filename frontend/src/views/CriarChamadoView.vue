@@ -78,87 +78,59 @@ const origens = ref([])
 const usuarios = ref([])
 const status = ref([]) // Lista de estados do chamado (ex: Aberto, Em Andamento, Fechado)
 
-// Configurações de API
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '') // Garante que não haja barra dupla
-const authHeaders = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}` // Pega o token do localStorage
-}
+import apiClient from '../services/api'
 
 onMounted(async () => {
     try {
-        // Função auxiliar para buscar dados de um endpoint
-        const fetchData = async (endpoint) => {
-            const res = await fetch(`${baseURL}${endpoint}`, { headers: authHeaders })
-            if (!res.ok) {
-                // Se a resposta não for OK (ex: 401, 500), tenta pegar a mensagem de erro do backend
-                const errorData = await res.json()
-                throw new Error(errorData.detail || `Erro HTTP ${res.status} ao carregar ${endpoint}`)
-            }
-            return res.json()
-        }
-
         // Carregando todas as listas necessárias para os selects
-        empresas.value = await fetchData('/empresas/')
-        maquinas.value = await fetchData('/maquinas/')
-        prioridades.value = await fetchData('/prioridades/')
-        origens.value = await fetchData('/origens_problema/')
-        usuarios.value = await fetchData('/usuarios/')
-        status.value = await fetchData('/status_chamado/')
+        empresas.value = await apiClient.get('/empresas/')
+        maquinas.value = await apiClient.get('/maquinas/')
+        prioridades.value = await apiClient.get('/prioridades/')
+        origens.value = await apiClient.get('/origens_problema/')
+        usuarios.value = await apiClient.get('/usuarios/')
+        status.value = await apiClient.get('/status_chamado/')
     } catch (error) {
-        console.error("Erro ao carregar dados para o formulário de chamado:", error)
-        alert(`Erro ao carregar dados: ${error.message}`) // Exibe um alerta amigável
+        alert(`Erro ao carregar dados: ${error.message || 'Erro de comunicação'}`)
     }
 })
 
 const enviarFormulario = async () => {
-    // Validação dos campos obrigatórios conforme o template e suas regras
+    // Validação dos campos obrigatórios conforme o schema do backend
     if (
-        !form.value.responsavel_atendimento_id ||
         !form.value.contato ||
         !form.value.empresa_id ||
         !form.value.relato
     ) {
-        alert('Por favor, preencha todos os campos obrigatórios (*).')
-        return // Impede o envio do formulário se a validação falhar
+        alert('Por favor, preencha todos os campos obrigatórios (*: Empresa, Contato e Relato).')
+        return
     }
 
     try {
         const payload = { ...form.value }
+        await apiClient.post('/chamados/', payload)
 
-        const resp = await fetch(`${baseURL}/chamados`, {
-            method: 'POST',
-            headers: authHeaders,
-            body: JSON.stringify(payload)
-        })
+        alert('Chamado criado com sucesso!')
 
-        if (resp.ok) {
-            alert('Chamado criado com sucesso!')
-
-            // Limpar o formulário para um novo chamado
-            form.value = {
-                responsavel_atendimento_id: null,
-                contato: '',
-                empresa_id: null,
-                relato: '',
-                prioridade_id: null,
-                tipo_maquina_id: null,
-                porta_ssh: '',
-                origem_id: null,
-                responsavel_acao_id: null,
-                acao_realizada: null,
-                status_id: null
-            }
-        } else {
-            const erro = await resp.json() // Tenta pegar a mensagem de erro do backend
-            alert('Erro ao criar chamado: ' + (erro.detail || 'Erro desconhecido.'))
+        // Limpar o formulário para um novo chamado somente em sucesso
+        form.value = {
+            responsavel_atendimento_id: null,
+            contato: '',
+            empresa_id: null,
+            relato: '',
+            prioridade_id: null,
+            tipo_maquina_id: null,
+            porta_ssh: '',
+            origem_id: null,
+            responsavel_acao_id: null,
+            acao_realizada: null,
+            status_id: null
         }
     } catch (error) {
-        console.error("Erro ao enviar formulário de chamado:", error)
-        alert(`Erro ao enviar chamado: ${error.message}`)
+        alert('Erro ao criar chamado: ' + (error.message || 'Erro desconhecido.'))
     }
 }
 </script>
+
 
 <style scoped>
 .formulario-chamado {

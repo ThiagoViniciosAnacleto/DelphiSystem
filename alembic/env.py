@@ -15,11 +15,20 @@ env_path = ROOT_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 # ---------- Define URL do banco ----------
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+cfg_url = config.get_main_option("sqlalchemy.url")
+database_url = os.getenv("DATABASE_URL") or (cfg_url if cfg_url and not cfg_url.startswith("driver://") else None)
+
+if ENVIRONMENT == "production":
+    if not database_url or database_url.startswith("sqlite"):
+        raise RuntimeError("DATABASE_URL de produção obrigatória para execução de migrações do Alembic.")
 else:
-    raise Exception("DATABASE_URL não encontrado no arquivo .env na raiz do projeto")
+    database_url = database_url or "sqlite:///./teste_local.db"
+
+config.set_main_option("sqlalchemy.url", database_url)
+
+
+
 
 # ---------- Logging padrão do Alembic ----------
 if config.config_file_name is not None:

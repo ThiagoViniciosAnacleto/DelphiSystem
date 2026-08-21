@@ -39,7 +39,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
+import apiClient from '../services/api'
 
 const senha = ref('')
 const confirmar = ref('')
@@ -53,7 +53,10 @@ const token = ref('')
 onMounted(() => {
     token.value = route.query.token || ''
     if (!token.value) {
-    mensagem.value = 'Token inválido ou ausente'
+        mensagem.value = 'Token inválido ou ausente'
+    } else {
+        // Remove token da URL para não vazar no histórico do navegador
+        router.replace({ query: {} })
     }
 })
 
@@ -61,24 +64,30 @@ const resetarSenha = async () => {
     if (senha.value !== confirmar.value) {
         mensagem.value = 'As senhas não coincidem'
         sucesso.value = false
-    return
-}
+        return
+    }
+
+    if (senha.value.length < 8) {
+        mensagem.value = 'A senha deve ter no mínimo 8 caracteres'
+        sucesso.value = false
+        return
+    }
 
     try {
-        const response = await axios.post(import.meta.env.VITE_API_URL + '/resetar-senha', {
+        const data = await apiClient.postPublic('/resetar-senha', {
             token: token.value,
             nova_senha: senha.value
         })
 
-    mensagem.value = response.data.mensagem
-    sucesso.value = true
+        mensagem.value = data?.mensagem || 'Senha redefinida com sucesso!'
+        sucesso.value = true
 
-    setTimeout(() => {
-        router.push('/login')
-    }, 3000)
+        setTimeout(() => {
+            router.push('/login')
+        }, 2000)
 
     } catch (err) {
-        mensagem.value = err.response?.data?.detail || 'Erro ao redefinir senha'
+        mensagem.value = err.message || 'Erro ao redefinir senha'
         sucesso.value = false
     }
 }

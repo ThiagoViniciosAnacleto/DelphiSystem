@@ -43,43 +43,31 @@
 
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
-import qs from 'qs'
 import { useRouter } from 'vue-router'
+import apiClient from '../services/api'
 
 const username = ref('')
 const password = ref('')
 const erro = ref('')
 const router = useRouter()
 
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL
-})
-
 const fazerLogin = async () => {
     try {
-        const response = await api.post(
-        '/login',
-        qs.stringify({
+        erro.value = ''
+        const data = await apiClient.postForm('/login', {
             username: username.value,
             password: password.value
-        }),
-        {
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        }
-    )
+        })
 
-    const token = response.data.access_token
-    const usuario = response.data.usuario
+        const token = data.access_token
+        const usuario = data.usuario
 
-    localStorage.setItem('token', token)
-    localStorage.setItem('usuario', JSON.stringify(usuario))
+        localStorage.setItem('token', token)
+        localStorage.setItem('usuario', JSON.stringify(usuario))
 
-    router.push('/dashboard')
+        router.push('/dashboard')
     } catch (err) {
-        erro.value = 'Usuário ou senha inválidos'
+        erro.value = err.message || 'Usuário ou senha inválidos'
     }
 }
 </script>
