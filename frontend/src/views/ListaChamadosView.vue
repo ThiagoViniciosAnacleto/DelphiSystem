@@ -4,7 +4,7 @@
 
         <div class="filtros">
             <input v-model="filtros.contato" placeholder="Filtrar por Contato" />
-            
+
             <select v-model="filtros.empresa_id">
                 <option :value="null">Filtrar por Empresa</option>
                 <option v-for="e in empresas" :value="e.id" :key="e.id">{{ e.nome }}</option>
@@ -19,7 +19,7 @@
                 <option :value="null">Filtrar por Prioridade</option>
                 <option v-for="p in prioridades" :value="p.id" :key="p.id">{{ p.nome }}</option>
             </select>
-            
+
             <select v-model="filtros.responsavel_id">
                 <option :value="null">Filtrar por Responsável</option>
                 <option v-for="u in usuarios" :value="u.id" :key="u.id">{{ u.nome }}</option>
@@ -71,6 +71,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { format } from 'date-fns';
+import apiClient from '../services/api';
 
 const router = useRouter();
 
@@ -90,62 +91,31 @@ const filtros = ref({
     desc: true,
 });
 
-// --- Configurações da API ---
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '');
-const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-};
-
-// --- Funções Auxiliares de API ---
-const fetchData = async (endpoint) => {
-    try {
-        const res = await fetch(`${baseURL}${endpoint}`, { headers });
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.detail || `Erro HTTP ${res.status} ao carregar ${endpoint}`);
-        }
-        return res.json();
-    } catch (error) {
-        console.error(`Erro ao carregar ${endpoint}:`, error);
-        alert(`Erro ao carregar dados: ${error.message}`);
-        throw error; // Re-lança para ser capturado por quem chamou
-    }
-};
-
 // --- Funções de Carregamento de Dados Iniciais ---
 const carregarDadosBase = async () => {
     try {
-        // Carrega dados para todos os selects de filtro
-        empresas.value = await fetchData('/empresas/');
-        status.value = await fetchData('/status_chamado/');
-        prioridades.value = await fetchData('/prioridades/');
-        usuarios.value = await fetchData('/usuarios/');
+        empresas.value = await apiClient.get('/empresas/');
+        status.value = await apiClient.get('/status_chamado/');
+        prioridades.value = await apiClient.get('/prioridades/');
+        usuarios.value = await apiClient.get('/usuarios/');
     } catch (error) {
-        console.error("Falha ao carregar dados base para filtros.");
+        // Trata erro sem quebrar
     }
 };
 
 const carregarChamados = async () => {
     try {
-        const params = new URLSearchParams();
+        const params = {};
+        if (filtros.value.contato) params.contato = filtros.value.contato;
+        if (filtros.value.empresa_id) params.empresa_id = filtros.value.empresa_id;
+        if (filtros.value.status_id) params.status_id = filtros.value.status_id;
+        if (filtros.value.prioridade_id) params.prioridade_id = filtros.value.prioridade_id;
+        if (filtros.value.responsavel_id) params.responsavel_id = filtros.value.responsavel_id;
+        params.order_by = filtros.value.order_by;
+        params.desc = filtros.value.desc;
 
-        if (filtros.value.contato) params.append('contato', filtros.value.contato);
-        if (filtros.value.empresa_id) params.append('empresa_id', filtros.value.empresa_id);
-        if (filtros.value.status_id) params.append('status_id', filtros.value.status_id);
-        if (filtros.value.prioridade_id) params.append('prioridade_id', filtros.value.prioridade_id);
-        if (filtros.value.responsavel_id) params.append('responsavel_id', filtros.value.responsavel_id);
-
-        params.append('order_by', filtros.value.order_by);
-        params.append('desc', filtros.value.desc); 
-
-        const url = `${baseURL}/chamados/?${params.toString()}`;
-
-        const chamadosData = await fetchData(url.replace(baseURL, ''));
-        chamados.value = chamadosData;
-        console.log("Chamados carregados:", chamados.value);
+        chamados.value = await apiClient.get('/chamados/', params);
     } catch (error) {
-        console.error("Falha ao carregar chamados.");
         chamados.value = [];
     }
 };
@@ -156,51 +126,40 @@ const aplicarFiltros = () => {
 };
 
 const limparFiltros = () => {
-    // Reseta todos os filtros para seus valores padrão
     filtros.value = {
         contato: '',
         empresa_id: null,
         status_id: null,
         prioridade_id: null,
         responsavel_id: null,
-        order_by: 'datetime_abertura', // Volta para o padrão de ordenação
-        desc: true, // Volta para o padrão de direção
+        order_by: 'datetime_abertura',
+        desc: true,
     };
-    carregarChamados(); // Recarrega chamados sem filtros
+    carregarChamados();
 };
 
 // --- Funções de Ação na Tabela ---
 const verDetalhes = (id) => {
-    // Exemplo de navegação: router.push(`/chamados/${id}`);
-    alert(`Ver detalhes do chamado ${id}`); // Placeholder
+    router.push(`/chamados/${id}`);
 };
 
 const editarChamado = (id) => {
-    // Exemplo de navegação: router.push(`/chamados/${id}/editar`);
-    alert(`Editar chamado ${id}`); // Placeholder
+    router.push(`/chamados/${id}`);
 };
 
 const deletarChamado = async (id) => {
-    if (confirm(`Tem certeza que deseja desativar o chamado ID ${id}?`)) {
-        try {
-            const res = await fetch(`${baseURL}/chamados/${id}`, {
-                method: 'DELETE',
-                headers,
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.detail || `Erro HTTP ${res.status} ao desativar chamado`);
-            }
-
-            alert('Chamado desativado com sucesso!');
-            carregarChamados(); // Recarrega a lista após a desativação
-        } catch (error) {
-            console.error('Erro ao desativar chamado:', error);
-            alert(`Erro ao desativar chamado: ${error.message}`);
-        }
+    if (!confirm(`Deseja realmente excluir o chamado #${id}?`)) return;
+    try {
+        await apiClient.delete(`/chamados/${id}`);
+        alert('Chamado excluído com sucesso!');
+        carregarChamados();
+    } catch (e) {
+        alert(e.message || 'Falha ao excluir chamado');
     }
 };
+
+
+
 
 // --- Funções Utilitárias de Formatação ---
 const formatarData = (dataString) => {

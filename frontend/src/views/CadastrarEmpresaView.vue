@@ -29,44 +29,38 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import apiClient from '../services/api'
 
 const empresas = ref([])
 const novaEmpresa = ref({ nome: '' })
 const editandoId = ref(null)
-
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
-const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-}
-console.log("🚀 VITE_API_URL:", import.meta.env.VITE_API_URL)
+const erro = ref('')
 
 // Lista empresas do backend.
 const carregarEmpresas = async () => {
     try {
-    const res = await fetch(`${baseURL}/empresas/`, { headers })
-    empresas.value = await res.json()
+        erro.value = ''
+        empresas.value = await apiClient.get('/empresas/')
     } catch (err) {
-    console.error("Erro ao carregar empresas:", err)
+        erro.value = 'Erro ao carregar empresas: ' + (err.message || 'Erro de comunicação')
     }
 }
 
 // Cria ou atualiza uma empresa
 const salvarEmpresa = async () => {
-    const url = editandoId.value
-        ? `${baseURL}/empresas/${editandoId.value}`
-        : `${baseURL}/empresas/`
-
-    const method = editandoId.value ? 'PUT' : 'POST'
-
-    await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(novaEmpresa.value)
-})
-
-    resetarFormulario()
-    carregarEmpresas()
+    try {
+        erro.value = ''
+        if (editandoId.value) {
+            await apiClient.put(`/empresas/${editandoId.value}`, novaEmpresa.value)
+        } else {
+            await apiClient.post('/empresas/', novaEmpresa.value)
+        }
+        resetarFormulario()
+        await carregarEmpresas()
+    } catch (err) {
+        erro.value = 'Erro ao salvar empresa: ' + (err.message || 'Erro de comunicação')
+        alert(erro.value)
+    }
 }
 
 // Preenche o form para edição
@@ -78,11 +72,13 @@ const editar = (empresa) => {
 // Desativa a empresa
 const deletar = async (id) => {
     if (confirm('Deseja desativar esta empresa?')) {
-        await fetch(`${baseURL}/empresas/${id}`, {
-        method: 'DELETE',
-        headers
-    })
-    carregarEmpresas()
+        try {
+            erro.value = ''
+            await apiClient.delete(`/empresas/${id}`)
+            await carregarEmpresas()
+        } catch (err) {
+            alert('Falha ao desativar empresa: ' + (err.message || 'Erro de comunicação'))
+        }
     }
 }
 
@@ -96,6 +92,7 @@ onMounted(() => {
     carregarEmpresas()
 })
 </script>
+
 
 <style scoped>
 .empresas {

@@ -13,7 +13,7 @@ def criar_chamado(db: Session, dados: ChamadoCreate, usuario_id: int) -> Chamado
     A data e hora de abertura (datetime_abertura) serão geradas automaticamente pelo backend.
     """
     chamado = Chamado(**dados.model_dump(exclude_unset=True))
-
+    chamado.criado_por_id = usuario_id
 
     db.add(chamado)
     db.commit()
@@ -32,22 +32,66 @@ def criar_chamado(db: Session, dados: ChamadoCreate, usuario_id: int) -> Chamado
     db.commit()
     return chamado
 
+def verificar_acesso_chamado(chamado: Optional[Chamado], usuario: models.Usuario) -> bool:
+    """
+    Verifica se o usuário tem permissão para acessar/modificar o chamado.
+    Admin e técnicos acessam todos. Usuário comum acessa apenas os que criou.
+    """
+    if not chamado or not getattr(chamado, "ativo", True):
+        return False
+    user_role = usuario.role.nome if (usuario.role and usuario.role.nome) else "comum"
+    if user_role in ["admin", "tecnico"]:
+        return True
+    if chamado.criado_por_id is not None and chamado.criado_por_id == usuario.id:
+        return True
+    return False
+
 def listar_chamados(
     db: Session,
     status_id: Optional[int] = None,
     empresa_id: Optional[int] = None,
     contato: Optional[str] = None,
     responsavel_id: Optional[int] = None,
+    prioridade_id: Optional[int] = None,
     order_by: str = "datetime_abertura",
     desc: bool = False,
+    skip: int = 0,
+    limit: Optional[int] = None,
+    usuario: Optional[models.Usuario] = None
 ) -> List[Chamado]:
 
-    query = db.query(Chamado).filter(Chamado.ativo == True)
+    query = (
+        db.query(Chamado)
+        .filter(Chamado.ativo == True)
+        .options(
+            joinedload(Chamado.empresa),
+            joinedload(Chamado.prioridade),
+            joinedload(Chamado.status),
+            joinedload(Chamado.tipo_maquina),
+            joinedload(Chamado.origem),
+            joinedload(Chamado.criado_por),
+            joinedload(Chamado.responsavel_atendimento),
+            joinedload(Chamado.responsavel_acao),
+            selectinload(Chamado.tags),
+            selectinload(Chamado.anexos).joinedload(models.Anexo.usuario),
+            selectinload(Chamado.interacoes).joinedload(models.Interacao.usuario),
+        )
+    )
+
+    # Política de menor privilégio: usuário comum lista estritamente os chamados que criou
+    is_staff = True
+    if usuario is not None:
+        user_role = usuario.role.nome if (usuario.role and usuario.role.nome) else "comum"
+        if user_role not in ["admin", "tecnico"]:
+            is_staff = False
+            query = query.filter(Chamado.criado_por_id == usuario.id)
 
     if status_id is not None:
         query = query.filter(Chamado.status_id == status_id)
     if empresa_id is not None:
         query = query.filter(Chamado.empresa_id == empresa_id)
+    if prioridade_id is not None:
+        query = query.filter(Chamado.prioridade_id == prioridade_id)
     if contato:
         query = query.filter(Chamado.contato.ilike(f"%{contato}%"))
     if responsavel_id is not None:
@@ -60,21 +104,28 @@ def listar_chamados(
             query = query.order_by(sa_desc(coluna))
         else:
             query = query.order_by(sa_asc(coluna))
-    else:
-        print(f"Aviso: Campo '{order_by}' para ordenação não encontrado no modelo Chamado.")
 
-    return query.all()
+    if skip:
+        query = query.offset(skip)
+    if limit is not None:
+        query = query.limit(limit)
 
-def obter_chamado(db: Session, chamado_id: int) -> Optional[Chamado]:
+    chamados = query.all()
+    if not is_staff:
+        for ch in chamados:
+            ch.interacoes = [i for i in ch.interacoes if not i.privado and i.ativo]
+            ch.anexos = [a for a in ch.anexos if a.ativo]
+    return chamados
+
+
+def obter_chamado(db: Session, chamado_id: int, is_staff: bool = True) -> Optional[Chamado]:
     """
-    Obtém um chamado específico pelo seu ID, já carregando (eager loading)
-    todos os relacionamentos necessários para o 'ChamadoOut'.
+    Obtém um chamado específico pelo seu ID com eager loading de relacionamentos.
     """
-    return (
+    chamado = (
         db.query(models.Chamado)
         .filter_by(id=chamado_id, ativo=True)
         .options(
-            # Carrega objetos 1-para-1 (melhor com joinedload)
             joinedload(models.Chamado.empresa),
             joinedload(models.Chamado.prioridade),
             joinedload(models.Chamado.status),
@@ -82,16 +133,17 @@ def obter_chamado(db: Session, chamado_id: int) -> Optional[Chamado]:
             joinedload(models.Chamado.origem),
             joinedload(models.Chamado.responsavel_atendimento),
             joinedload(models.Chamado.responsavel_acao),
-
-            # Carrega listas N-para-1 (MUITO melhor com selectinload)
             selectinload(models.Chamado.tags),
-
-            # Carrega as listas e TAMBÉM o 'autor' de cada item da lista
             selectinload(models.Chamado.interacoes).joinedload(models.Interacao.usuario),
             selectinload(models.Chamado.anexos).joinedload(models.Anexo.usuario)
         )
         .first()
     )
+    if chamado and not is_staff:
+        chamado.interacoes = [i for i in chamado.interacoes if not i.privado and i.ativo]
+        chamado.anexos = [a for a in chamado.anexos if a.ativo]
+    return chamado
+
 
 def atualizar_chamado(db: Session, chamado_id: int, dados: ChamadoUpdate, usuario_id: int) -> Optional[Chamado]:
     """
@@ -105,7 +157,7 @@ def atualizar_chamado(db: Session, chamado_id: int, dados: ChamadoUpdate, usuari
 
     for campo, novo_valor in campos_atualizados.items():
         valor_antigo = getattr(chamado, campo)
-        if str(valor_antigo) != str(novo_valor): 
+        if str(valor_antigo) != str(novo_valor):
             log = LogAcao(
                 usuario_id=usuario_id,
                 chamado_id=chamado_id,
@@ -144,4 +196,3 @@ def deletar_chamado(db: Session, chamado_id: int, usuario_id: int) -> Optional[C
     db.add(log)
     db.commit()
     return chamado
-

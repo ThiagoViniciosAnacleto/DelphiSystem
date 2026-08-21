@@ -16,6 +16,9 @@ def listar_chamados_recorrentes(db: Session, skip: int = 0, limit: int = 100):
 def obter_chamado_recorrente(db: Session, chamado_id: int):
     return db.query(ChamadoRecorrente).filter_by(id=chamado_id, ativo=True).first()
 
+buscar_chamado_recorrente_por_id = obter_chamado_recorrente
+
+
 def atualizar_chamado_recorrente(db: Session, chamado_id: int, dados: ChamadoRecorrenteUpdate):
     chamado = db.query(ChamadoRecorrente).filter_by(id=chamado_id, ativo=True).first()
     if not chamado:

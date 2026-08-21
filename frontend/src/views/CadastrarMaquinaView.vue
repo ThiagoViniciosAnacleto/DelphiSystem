@@ -30,38 +30,38 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import apiClient from '../services/api'
 
 const maquinas = ref([])
 const novaMaquina = ref({ modelo: '' })
 const editandoId = ref(null)
-
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
-const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-}
+const erro = ref('')
 
 // Lista máquinas
 const carregarMaquinas = async () => {
-    const res = await fetch(`${baseURL}/maquinas/`, { headers })
-    maquinas.value = await res.json()
+    try {
+        erro.value = ''
+        maquinas.value = await apiClient.get('/maquinas/')
+    } catch (err) {
+        erro.value = 'Erro ao carregar máquinas: ' + (err.message || 'Erro de comunicação')
+    }
 }
 
 // Cria ou edita máquina
 const salvarMaquina = async () => {
-    const url = editandoId.value
-        ? `${baseURL}/maquinas/${editandoId.value}`
-        : `${baseURL}/maquinas/`
-    const method = editandoId.value ? 'PUT' : 'POST'
-
-    await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(novaMaquina.value)
-    })
-
-    resetarFormulario()
-    carregarMaquinas()
+    try {
+        erro.value = ''
+        if (editandoId.value) {
+            await apiClient.put(`/maquinas/${editandoId.value}`, novaMaquina.value)
+        } else {
+            await apiClient.post('/maquinas/', novaMaquina.value)
+        }
+        resetarFormulario()
+        await carregarMaquinas()
+    } catch (err) {
+        erro.value = 'Erro ao salvar máquina: ' + (err.message || 'Erro de comunicação')
+        alert(erro.value)
+    }
 }
 
 // Preenche para edição
@@ -73,11 +73,13 @@ const editar = (maquina) => {
 // Deleta
 const deletar = async (id) => {
     if (confirm('Deseja desativar este modelo de máquina?')) {
-        await fetch(`${baseURL}/maquinas/${id}`, {
-        method: 'DELETE',
-        headers
-    })
-    carregarMaquinas()
+        try {
+            erro.value = ''
+            await apiClient.delete(`/maquinas/${id}`)
+            await carregarMaquinas()
+        } catch (err) {
+            alert('Falha ao desativar máquina: ' + (err.message || 'Erro de comunicação'))
+        }
     }
 }
 
@@ -89,6 +91,7 @@ const resetarFormulario = () => {
 
 onMounted(carregarMaquinas)
 </script>
+
 
 <style scoped>
 .maquinas {

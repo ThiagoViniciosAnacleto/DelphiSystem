@@ -37,14 +37,12 @@ const usuario = reactive({
 
 onMounted(() => {
     const raw = localStorage.getItem('usuario')
-    console.log('[DEBUG] RAW usuario from localStorage:', raw)
 
     try {
-        const userData = JSON.parse(raw)
-        console.log('[DEBUG] Parsed userData:', userData)
+        const userData = raw ? JSON.parse(raw) : null
 
         if (userData) {
-            usuario.nome = userData.nome
+            usuario.nome = userData.nome || ''
 
             const nivelMap = {
                 admin: 'Administrador',
@@ -59,17 +57,14 @@ onMounted(() => {
             }
 
             const role = userData.role || 'comum'
-                usuario.nivel = nivelMap[role] || 'Usuário'
-                usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
-
-                console.log('[DEBUG] role recebido:', userData.role)
-                console.log('[DEBUG] usuario.nivel:', usuario.nivel)
-                console.log('[DEBUG] usuario.avatar final:', usuario.avatar)
-            }
-            } catch (err) {
-            console.error('Erro ao fazer parse do usuário:', err)
-            }
+            usuario.nivel = nivelMap[role] || 'Usuário'
+            usuario.avatar = userData.avatar || avatarPorNivel[usuario.nivel] || '/avatar.png'
+        }
+    } catch {
+        // Ignora erro de parse corrompido sem vazar dados
+    }
 })
+
 
 
 
@@ -156,4 +151,3 @@ function logout() {
     color: #6c757d;
 }
 </style>
-

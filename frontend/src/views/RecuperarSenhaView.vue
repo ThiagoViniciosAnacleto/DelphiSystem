@@ -27,7 +27,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import apiClient from '../services/api'
 
 const email = ref('')
 const mensagem = ref('')
@@ -35,13 +35,13 @@ const sucesso = ref(false)
 
 const enviarEmail = async () => {
     try {
-        const response = await axios.post(import.meta.env.VITE_API_URL + '/recuperar-senha', {
-        email: email.value
-    })
-        mensagem.value = response.data.mensagem
+        const data = await apiClient.postPublic('/recuperar-senha', {
+            email: email.value
+        })
+        mensagem.value = data?.mensagem || 'Instruções enviadas com sucesso.'
         sucesso.value = true
     } catch (err) {
-        mensagem.value = err.response?.data?.detail || 'Erro ao enviar e-mail de recuperação'
+        mensagem.value = err.message || 'Erro ao enviar e-mail de recuperação'
         sucesso.value = false
     }
 }

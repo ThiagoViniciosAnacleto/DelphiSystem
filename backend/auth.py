@@ -2,7 +2,9 @@
 import os
 import json
 import urllib.request
-from datetime import datetime, timedelta
+import hmac
+import hashlib
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
 # Dependências de Terceiros
@@ -13,14 +15,23 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session, joinedload
 
 # Módulos Locais
-from backend.database import SessionLocal
+from backend.database import SessionLocal, get_db
 from backend import models
 
-## --- Configuração de Segurança (Carregada do .env pelo main.py) ---
+## --- Configuração de Segurança (Carregada do .env) ---
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+SECRET_KEY = os.getenv("SECRET_KEY", "delphi_secret_key_default_for_development_replace_in_prod")
+
+if ENVIRONMENT == "production":
+    if not os.getenv("SECRET_KEY") or SECRET_KEY == "delphi_secret_key_default_for_development_replace_in_prod":
+        raise RuntimeError("SECRET_KEY obrigatória e segura em ambiente de produção.")
+
 ALGORITHM = "HS256"
+ACCESS_AUDIENCE = "delphi_access"
+RESET_AUDIENCE = "delphi_reset"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 horas
+RESET_TOKEN_EXPIRE_MINUTES = 30       # 30 minutos
 
 # Contexto do Passlib para senhas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -35,20 +46,18 @@ CREDENTIALS_EXCEPTION = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-if not SECRET_KEY:
-    raise RuntimeError("SECRET_KEY não definida no ambiente! (Verifique o .env e as variáveis no Render)")
 
-## --- Dependência de Sessão do DB ---
+## --- Funções de Criptografia, Validação e Token ---
 
-def get_db():
-    """Gera uma sessão do banco de dados para uma requisição."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-## --- Funções de Criptografia e Token ---
+def validar_complexidade_senha(senha: str) -> tuple[bool, str]:
+    """Valida requisitos de complexidade da senha."""
+    if not senha or len(senha) < 8:
+        return False, "A senha deve ter no mínimo 8 caracteres."
+    if not any(c.isdigit() for c in senha):
+        return False, "A senha deve conter pelo menos um número."
+    if not any(c.isalpha() for c in senha):
+        return False, "A senha deve conter pelo menos uma letra."
+    return True, ""
 
 def gerar_hash_senha(senha: str) -> str:
     """Gera um hash seguro para uma senha em texto puro."""
@@ -58,22 +67,78 @@ def verificar_senha(senha_plain: str, senha_hash: str) -> bool:
     """Verifica se a senha em texto puro corresponde ao hash."""
     return pwd_context.verify(senha_plain, senha_hash)
 
-def criar_token_acesso(data: dict, expires_delta: Optional[timedelta] = None):
-    """Cria um novo token JWT."""
+def calcular_fingerprint_senha(senha_hash: str) -> str:
+    """Calcula um fingerprint criptográfico opaco (HMAC-SHA256) da hash de senha usando chave derivada."""
+    if not senha_hash:
+        return ""
+    chave_derivada = hashlib.sha256(f"delphi_pwh_pepper:{SECRET_KEY}".encode("utf-8")).digest()
+    return hmac.new(chave_derivada, senha_hash.encode("utf-8"), hashlib.sha256).hexdigest()
+
+def validar_fingerprint_senha(fingerprint_token: str, senha_hash_atual: str) -> bool:
+    """Valida se o fingerprint contido no token corresponde à hash atual da senha via compare_digest."""
+    if not fingerprint_token or not senha_hash_atual:
+        return False
+    esperado = calcular_fingerprint_senha(senha_hash_atual)
+    return hmac.compare_digest(fingerprint_token, esperado)
+
+def criar_token_acesso(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Cria um token JWT específico para ACESSO à API com claim type e aud obrigatórias."""
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode.update({"exp": expire})
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({
+        "exp": expire,
+        "type": "access",
+        "aud": ACCESS_AUDIENCE
+    })
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def verificar_token(token: str) -> dict:
-    """Decodifica um token, tratando erros. Usado para reset de senha."""
+def criar_token_recuperacao(data: dict, expires_delta: Optional[timedelta] = None, senha_hash: Optional[str] = None, pwh_fingerprint: Optional[str] = None) -> str:
+    """Cria um token JWT específico para RECUPERAÇÃO DE SENHA com fingerprint opaco de uso único."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES))
+    fingerprint = pwh_fingerprint or (calcular_fingerprint_senha(senha_hash) if senha_hash else None)
+    if not fingerprint:
+        raise ValueError("Fingerprint de senha obrigatório para token de recuperação.")
+    to_encode.update({
+        "exp": expire,
+        "type": "password_reset",
+        "aud": RESET_AUDIENCE,
+        "pwh": fingerprint
+    })
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def verificar_token_recuperacao(token: str) -> dict:
+    """Decodifica e valida estritamente um token de recuperação de senha."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience=RESET_AUDIENCE)
+        token_type = payload.get("type")
+        if token_type != "password_reset":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token inválido para redefinição de senha."
+            )
+        if not payload.get("sub"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token de recuperação inválido."
+            )
+        if not payload.get("pwh"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token de recuperação sem fingerprint de segurança."
+            )
         return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado"
+        )
+
+
+def verificar_token(token: str) -> dict:
+    """Decodifica um token de acesso validando a audiência."""
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience=ACCESS_AUDIENCE)
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido ou expirado")
 
@@ -81,8 +146,8 @@ def verificar_token(token: str) -> dict:
 
 def autenticar_usuario(db: Session, email: str, senha: str) -> Optional[models.Usuario]:
     """
-    Autentica um usuário. 
-    Verifica email, senha, se está ativo e já carrega o cargo (role).
+    Autentica um usuário.
+    Verifica email, senha, se está ativo e carrega o cargo (role).
     """
     usuario = (
         db.query(models.Usuario)
@@ -98,11 +163,14 @@ def autenticar_usuario(db: Session, email: str, senha: str) -> Optional[models.U
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.Usuario:
     """
-    Dependência do FastAPI para obter o usuário logado a partir de um token.
-    Também carrega o cargo (role) para evitar queries N+1.
+    Dependência para obter o usuário logado a partir do token de acesso.
+    Exige estritamente type=='access' e audiência 'delphi_access'.
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience=ACCESS_AUDIENCE)
+        token_type = payload.get("type")
+        if token_type != "access":
+            raise CREDENTIALS_EXCEPTION
         email: str = payload.get("sub")
         if not email:
             raise CREDENTIALS_EXCEPTION
@@ -111,14 +179,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     usuario = (
         db.query(models.Usuario)
-        .options(joinedload(models.Usuario.role)) # Eager load do cargo
+        .options(joinedload(models.Usuario.role))  # Eager load do cargo
         .filter(models.Usuario.email == email, models.Usuario.ativo.is_(True))
         .first()
     )
-    
+
     if not usuario:
         raise CREDENTIALS_EXCEPTION
     return usuario
+
 
 class RoleChecker:
     """
@@ -129,7 +198,6 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     def __call__(self, current_user: models.Usuario = Depends(get_current_user)):
-        # Define 'comum' como padrão se o usuário não tiver cargo (role)
         user_role_name = "comum"
         if current_user.role and current_user.role.nome:
             user_role_name = current_user.role.nome

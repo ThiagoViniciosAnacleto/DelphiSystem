@@ -27,60 +27,37 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import apiClient from '../services/api'
 
 const status = ref([])
 const novoStatus = ref({ nome: '' })
 const editandoId = ref(null)
-
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
-const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-}
+const erro = ref('')
 
 const carregarStatus = async () => {
     try {
-        // CORREÇÃO: Indentação movida para dentro do try
-        const res = await fetch(`${baseURL}/status_chamado/`, { headers })
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.detail || `Erro HTTP ${res.status} ao carregar status`);
-        }
-        status.value = await res.json()
+        erro.value = ''
+        status.value = await apiClient.get('/status_chamado/')
     } catch (err) {
-        // CORREÇÃO: Indentação movida para dentro do catch
-        console.error('Erro ao carregar status:', err)
-        alert(`Erro ao carregar status: ${err.message || err}`);
+        erro.value = 'Erro ao carregar status: ' + (err.message || 'Erro de comunicação')
     }
 }
 
 const salvarStatus = async () => {
-    const url = editandoId.value
-        ? `${baseURL}/status_chamado/${editandoId.value}`
-        : `${baseURL}/status_chamado/`
-
-    const method = editandoId.value ? 'PUT' : 'POST'
-
     try {
-        // CORREÇÃO: Indentação movida para dentro do try
-        const res = await fetch(url, {
-            method,
-            headers,
-            body: JSON.stringify(novoStatus.value)
-        });
-
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.detail || `Erro HTTP ${res.status} ao salvar status`);
+        erro.value = ''
+        if (editandoId.value) {
+            await apiClient.put(`/status_chamado/${editandoId.value}`, novoStatus.value)
+        } else {
+            await apiClient.post('/status_chamado/', novoStatus.value)
         }
 
         resetarFormulario()
-        carregarStatus()
-        alert('Status salvo com sucesso!');
+        await carregarStatus()
+        alert('Status salvo com sucesso!')
     } catch (err) {
-        // CORREÇÃO: Indentação movida para dentro do catch
-        console.error('Erro ao salvar status:', err);
-        alert(`Erro ao salvar status: ${err.message || err}`);
+        erro.value = 'Erro ao salvar status: ' + (err.message || 'Erro de comunicação')
+        alert(erro.value)
     }
 }
 
@@ -92,23 +69,12 @@ const editar = (itemStatus) => {
 const deletar = async (id) => {
     if (confirm('Deseja desativar este status?')) {
         try {
-            // CORREÇÃO: Indentação movida para dentro do try
-            const res = await fetch(`${baseURL}/status_chamado/${id}`, {
-                method: 'DELETE',
-                headers
-            });
-
-            if (!res.ok) {
-                // CORREÇÃO: Removida a palavra 'new' extra aqui (new new Error)
-                const errorData = await res.json();
-                throw new Error(errorData.detail || `Erro HTTP ${res.status} ao deletar status`);
-            }
-            carregarStatus();
-            alert('Status desativado com sucesso!');
+            erro.value = ''
+            await apiClient.delete(`/status_chamado/${id}`)
+            await carregarStatus()
+            alert('Status desativado com sucesso!')
         } catch (err) {
-            // CORREÇÃO: Indentação movida para dentro do catch
-            console.error('Erro ao desativar status:', err);
-            alert(`Erro ao desativar status: ${err.message || err}`);
+            alert('Erro ao desativar status: ' + (err.message || 'Erro de comunicação'))
         }
     }
 }
@@ -120,6 +86,7 @@ const resetarFormulario = () => {
 
 onMounted(carregarStatus)
 </script>
+
 
 <style scoped>
 .status-chamado {

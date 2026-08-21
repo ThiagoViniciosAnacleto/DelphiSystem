@@ -5,7 +5,7 @@
         <form @submit.prevent="salvarUsuario">
             <input v-model="usuario.nome" placeholder="Nome completo" required />
             <input v-model="usuario.email" type="email" placeholder="E-mail" required />
-            
+
             <input
                 v-if="!editandoId"
                 v-model="usuario.senha"
@@ -13,7 +13,7 @@
                 placeholder="Senha"
                 required
             />
-            
+
             <select v-model="usuario.role_id" :required="!editandoId">
                 <option v-if="!editandoId" value="" disabled>Selecione o perfil</option>
                 <option v-for="r in roles" :value="r.id" :key="r.id">{{ r.nome }}</option>
@@ -44,84 +44,65 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import apiClient from '../services/api'
 
 const usuarios = ref([])
 const roles = ref([])
 const usuario = ref({ nome: '', email: '', senha: '', role_id: '' })
 const editandoId = ref(null)
-
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
-const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-}
+const erro = ref('')
 
 const carregarUsuarios = async () => {
     try {
-        const res = await fetch(`${baseURL}/usuarios/`, { headers })
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        usuarios.value = await res.json()
+        erro.value = ''
+        usuarios.value = await apiClient.get('/usuarios/')
     } catch (error) {
-        console.error("Erro ao carregar usuários:", error);
+        erro.value = "Erro ao carregar usuários: " + (error.message || 'Erro de comunicação')
     }
 }
 
-
 const carregarRoles = async () => {
     try {
-        const res = await fetch(`${baseURL}/roles/`, { headers })
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        roles.value = await res.json()
+        erro.value = ''
+        roles.value = await apiClient.get('/roles/')
     } catch (error) {
-        console.error("Erro ao carregar roles:", error);
+        erro.value = "Erro ao carregar roles: " + (error.message || 'Erro de comunicação')
     }
 }
 
 const salvarUsuario = async () => {
-    const url = editandoId.value
-        ? `${baseURL}/usuarios/${editandoId.value}`
-        : `${baseURL}/usuarios/`
-
-    const method = editandoId.value ? 'PUT' : 'POST'
-    // Cria um payload específico para a requisição
     const payload = {
         nome: usuario.value.nome,
         email: usuario.value.email,
-        role_id: usuario.value.role_id,
-    };
-    
-    if (!editandoId.value) { // Se estiver criando um novo usuário (POST)
-        // A senha é obrigatória no campo do template para criação
-        payload.senha = usuario.value.senha;
+        role_id: usuario.value.role_id ? Number(usuario.value.role_id) : null,
+    }
+
+    if (!editandoId.value) {
+        payload.senha = usuario.value.senha
     }
 
     try {
-        const res = await fetch(url, {
-            method,
-            headers,
-            body: JSON.stringify(payload) // Envia o payload construído
-        });
-
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.detail || `Erro HTTP: ${res.status}`);
+        erro.value = ''
+        if (editandoId.value) {
+            await apiClient.put(`/usuarios/${editandoId.value}`, payload)
+        } else {
+            await apiClient.post('/usuarios/', payload)
         }
 
-        alert(`Usuário ${editandoId.value ? 'atualizado' : 'cadastrado'} com sucesso!`);
+        alert(`Usuário ${editandoId.value ? 'atualizado' : 'cadastrado'} com sucesso!`)
+        resetarFormulario()
+        await carregarUsuarios()
     } catch (error) {
-        console.error("Erro ao salvar usuário:", error);
-        alert(`Erro ao salvar usuário: ${error.message}`);
+        erro.value = `Erro ao salvar usuário: ${error.message}`
+        alert(erro.value)
     }
-
-    resetarFormulario();
-    carregarUsuarios();
 }
 
 const editar = (u) => {
     usuario.value = {
         nome: u.nome,
         email: u.email,
-        role_id: u.role_id
+        role_id: u.role_id || u.role?.id || ''
     }
     editandoId.value = u.id
 }
@@ -129,21 +110,13 @@ const editar = (u) => {
 const deletar = async (id) => {
     if (confirm('Deseja desativar este usuário?')) {
         try {
-            const res = await fetch(`${baseURL}/usuarios/${id}`, {
-                method: 'DELETE',
-                headers
-            })
-
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.detail || `Erro HTTP: ${res.status}`);
-            }
-            alert('Usuário desativado com sucesso!');
+            erro.value = ''
+            await apiClient.delete(`/usuarios/${id}`)
+            alert('Usuário desativado com sucesso!')
+            await carregarUsuarios()
         } catch (error) {
-            console.error("Erro ao desativar usuário:", error);
-            alert(`Erro ao desativar usuário: ${error.message}`);
+            alert(`Erro ao desativar usuário: ${error.message}`)
         }
-        carregarUsuarios();
     }
 }
 
@@ -157,6 +130,8 @@ onMounted(() => {
     carregarRoles()
 })
 </script>
+
+
 
 <style scoped>
 .usuarios {

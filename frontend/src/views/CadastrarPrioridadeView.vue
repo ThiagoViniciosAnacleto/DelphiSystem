@@ -27,41 +27,36 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import apiClient from '../services/api'
 
 const prioridades = ref([])
 const novaPrioridade = ref({ nome: '' })
 const editandoId = ref(null)
-
-const baseURL = import.meta.env.VITE_API_URL.replace(/\/$/, '')
-const headers = {
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token')}`
-}
+const erro = ref('')
 
 const carregarPrioridades = async () => {
   try {
-    const res = await fetch(`${baseURL}/prioridades/`, { headers })
-    prioridades.value = await res.json()
+    erro.value = ''
+    prioridades.value = await apiClient.get('/prioridades/')
   } catch (err) {
-    console.error('Erro ao carregar prioridades:', err)
+    erro.value = 'Erro ao carregar prioridades: ' + (err.message || 'Erro de comunicação')
   }
 }
 
 const salvarPrioridade = async () => {
-  const url = editandoId.value
-    ? `${baseURL}/prioridades/${editandoId.value}`
-    : `${baseURL}/prioridades/`
-
-  const method = editandoId.value ? 'PUT' : 'POST'
-
-  await fetch(url, {
-    method,
-    headers,
-    body: JSON.stringify(novaPrioridade.value)
-  })
-
-  resetarFormulario()
-  carregarPrioridades()
+  try {
+    erro.value = ''
+    if (editandoId.value) {
+      await apiClient.put(`/prioridades/${editandoId.value}`, novaPrioridade.value)
+    } else {
+      await apiClient.post('/prioridades/', novaPrioridade.value)
+    }
+    resetarFormulario()
+    await carregarPrioridades()
+  } catch (err) {
+    erro.value = 'Erro ao salvar prioridade: ' + (err.message || 'Erro de comunicação')
+    alert(erro.value)
+  }
 }
 
 const editar = (prioridade) => {
@@ -71,11 +66,13 @@ const editar = (prioridade) => {
 
 const deletar = async (id) => {
   if (confirm('Deseja desativar esta prioridade?')) {
-    await fetch(`${baseURL}/prioridades/${id}`, {
-      method: 'DELETE',
-      headers
-    })
-    carregarPrioridades()
+    try {
+      erro.value = ''
+      await apiClient.delete(`/prioridades/${id}`)
+      await carregarPrioridades()
+    } catch (err) {
+      alert('Falha ao desativar prioridade: ' + (err.message || 'Erro de comunicação'))
+    }
   }
 }
 
@@ -86,6 +83,7 @@ const resetarFormulario = () => {
 
 onMounted(carregarPrioridades)
 </script>
+
 
 <style scoped>
 .prioridades {
